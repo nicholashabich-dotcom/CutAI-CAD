@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <title>CutAI CAD v0.2.1</title>
-  <link rel="stylesheet" href="styles-v021.css">
+  <title>CutAI CAD v0.3</title>
+  <link rel="stylesheet" href="styles-v03.css">
 </head>
 <body>
   <header class="topbar">
-    <div><strong>CutAI CAD</strong> <span>v0.2.1</span></div>
+    <div><strong>CutAI CAD</strong> <span>v0.3</span></div>
     <div id="status">Bereit · mm</div>
   </header>
 
@@ -20,7 +20,9 @@
       <button class="tool" data-tool="rect">▭<small>Rechteck</small></button>
       <button class="tool" data-tool="circle">○<small>Kreis</small></button>
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
+      <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
+      <button id="duplicateBtn">⧉<small>Duplizieren</small></button>
       <button id="undoBtn">↶<small>Zurück</small></button>
       <button id="deleteBtn">⌫<small>Löschen</small></button>
     </aside>
@@ -48,16 +50,17 @@
       <section class="properties hidden" id="properties">
         <div class="properties-head">
           <strong id="propTitle">Eigenschaften</strong>
-          <button id="closeProperties" aria-label="Eigenschaften schließen">×</button>
+          <button id="closeProperties">×</button>
         </div>
         <div id="propertyFields" class="property-fields"></div>
+        <div id="edgeInfo" class="edge-info hidden"></div>
         <button id="applyProperties" class="apply-btn">Maße übernehmen</button>
       </section>
     </section>
   </main>
 
   <section class="command-panel">
-    <label for="command">KI-Befehl <span class="beta">CAD-Parser V0.2.1</span></label>
+    <label for="command">KI-Befehl <span class="beta">CAD-Parser V0.3</span></label>
     <div class="command-row">
       <input id="command" type="text" placeholder='Platte 800 x 400 mit 4 Bohrungen Ø12 Rand 30'>
       <button id="runCommand">Ausführen</button>
@@ -66,20 +69,17 @@
       <button id="newBtn">Neu</button>
       <button id="saveBtn">Projekt speichern</button>
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
+      <button id="dxfBtn">DXF exportieren</button>
       <button id="fitBtn">Alles anzeigen</button>
     </div>
   </section>
 
   <script>
-    // Entwicklungsmodus: alte Service Worker und deren Caches entfernen,
-    // damit auf dem iPhone niemals JS/CSS aus verschiedenen Versionen gemischt werden.
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
-    if ("caches" in window) {
-      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-    }
+    if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   </script>
-  <script src="app-v021.js"></script>
+  <script src="app-v03.js"></script>
 </body>
 </html>
