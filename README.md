@@ -1,26 +1,45 @@
-# CutAI CAD v0.3
+# CutAI CAD/CAM v0.4
+
+## Ziel
+V0.4 trennt Geometrie von CAM-Daten. Noch keine echten MicroStep-M-/NC-Codes.
 
 ## Neu
-- DXF-Export als AutoCAD R12 ASCII (AC1009)
-- Rechtecke werden im DXF als vier LINE-Elemente ausgegeben
-- Kreise/Bohrungen als echte CIRCLE-Elemente
-- Mehrfachauswahl
-- Duplizieren (20 mm Versatz)
-- Exakte X/Y- und Durchmesserbearbeitung
-- Bei Kreisen innerhalb eines Rechtecks werden Randabstände angezeigt
+- Startpunkt pro Kontur setzen/löschen
+- sichtbarer Startpunkt + Richtungsmarker
+- Schneidrichtung CW/CCW
+- Technologien: Plasma, Laser, Autogen, Markieren, Bohren, Keine
+- Konturtypen: Auto, Außen, Innen, Markieren, Bohren, Keine
+- Schnittreihenfolge
+- Lead-In / Lead-Out als CAM-Attribute
+- automatische CAM-Zuordnung: Innenkonturen vor Außenkonturen
+- DXF R12 Import: LINE, CIRCLE, ARC
+- DXF R12 Export mit Technologie/Konturtyp in Layernamen
+- einfacher SVG-Import: line, rect, circle, polyline, polygon
+- neutraler CAM-Plan als JSON
 - Projekt speichern/laden
-- Fangpunkte und Touch-Bedienung
 
-## DXF-Test
-1. Befehl: `Platte 800 x 400 mit 4 Bohrungen Ø12 Rand 30`
-2. `DXF exportieren`
-3. Datei `cutai-export-r12.dxf` in ASPER oder einem anderen CAD/CAM öffnen.
-4. Prüfen:
-   - Außenkontur 800 × 400 mm
-   - vier Kreise Ø12 mm
-   - Mittelpunkte 30 mm von den jeweiligen Außenkanten
+## Startpunkt
+Objekt auswählen → `Startpunkt setzen` → gewünschte Position auf der Kontur antippen.
 
-## Hinweis
-Die Y-Achse wird beim DXF-Export invertiert, damit die Bildschirmkoordinaten in ein übliches CAD-Koordinatensystem überführt werden.
+## CAM automatisch
+Für eine Platte mit Kreisen:
+- Kreise innerhalb des Rechtecks → Innenkontur
+- Rechteck → Außenkontur
+- Innenkonturen werden vor Außenkonturen einsortiert
 
-Noch keine NC-/Maschinenausgabe. DXF ist zunächst nur Geometrieaustausch.
+## DXF Layer
+Beispiele:
+- `PLASMA_INSIDE`
+- `PLASMA_OUTSIDE`
+- `LASER_INSIDE`
+- `MARKIEREN_MARK`
+
+## Neutraler CAM-Plan
+`CAM-Plan exportieren` erzeugt `cutai-cam-plan-v04.json`.
+
+Dieser Plan enthält bereits Technologie, Konturtyp, Richtung, Reihenfolge, Startpunkt und Geometrie,
+aber bewusst noch keine maschinenspezifischen M-Codes.
+
+## Nächster Schritt
+Ein MicroStep-Postprozessor kann später den neutralen CAM-Plan in echte NC-Befehle übersetzen.
+Dafür brauchen wir die freigegebene Postprozessor-/iMSNC-Dokumentation oder echte Referenz-NC-Dateien.

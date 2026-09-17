@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <title>CutAI CAD v0.3</title>
-  <link rel="stylesheet" href="styles-v03.css">
+  <title>CutAI CAD/CAM v0.4</title>
+  <link rel="manifest" href="manifest-v04.webmanifest">
+  <link rel="stylesheet" href="styles-v04.css">
 </head>
 <body>
   <header class="topbar">
-    <div><strong>CutAI CAD</strong> <span>v0.3</span></div>
+    <div><strong>CutAI CAD/CAM</strong> <span>v0.4</span></div>
     <div id="status">Bereit · mm</div>
   </header>
 
@@ -22,7 +23,7 @@
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
       <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
-      <button id="duplicateBtn">⧉<small>Duplizieren</small></button>
+      <button id="duplicateBtn">⧉<small>Kopieren</small></button>
       <button id="undoBtn">↶<small>Zurück</small></button>
       <button id="deleteBtn">⌫<small>Löschen</small></button>
     </aside>
@@ -41,6 +42,7 @@
         <rect id="gridBg" x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)"/>
         <g id="geometry"></g>
         <g id="dimensions"></g>
+        <g id="camMarkers"></g>
         <g id="preview"></g>
         <g id="snapLayer"></g>
       </svg>
@@ -52,24 +54,74 @@
           <strong id="propTitle">Eigenschaften</strong>
           <button id="closeProperties">×</button>
         </div>
+
         <div id="propertyFields" class="property-fields"></div>
+
+        <div id="camFields" class="cam-fields">
+          <div class="field">
+            <label>Technologie</label>
+            <select id="technology">
+              <option>Plasma</option>
+              <option>Laser</option>
+              <option>Autogen</option>
+              <option>Markieren</option>
+              <option>Bohren</option>
+              <option>Keine</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Konturtyp</label>
+            <select id="contourType">
+              <option value="auto">Auto</option>
+              <option value="outside">Außen</option>
+              <option value="inside">Innen</option>
+              <option value="mark">Markieren</option>
+              <option value="drill">Bohren</option>
+              <option value="none">Keine</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Schneidrichtung</label>
+            <select id="direction">
+              <option value="cw">Im Uhrzeigersinn</option>
+              <option value="ccw">Gegen Uhrzeigersinn</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Schnittreihenfolge</label>
+            <input id="cutOrder" type="number" min="1" step="1">
+          </div>
+          <div class="field">
+            <label>Lead-In (mm)</label>
+            <input id="leadIn" type="number" step="0.1">
+          </div>
+          <div class="field">
+            <label>Lead-Out (mm)</label>
+            <input id="leadOut" type="number" step="0.1">
+          </div>
+        </div>
+
         <div id="edgeInfo" class="edge-info hidden"></div>
-        <button id="applyProperties" class="apply-btn">Maße übernehmen</button>
+
+        <div class="prop-actions">
+          <button id="setStartBtn">Startpunkt setzen</button>
+          <button id="clearStartBtn">Startpunkt löschen</button>
+          <button id="applyProperties" class="apply-btn">Übernehmen</button>
+        </div>
       </section>
     </section>
   </main>
 
-  <section class="command-panel">
-    <label for="command">KI-Befehl <span class="beta">CAD-Parser V0.3</span></label>
-    <div class="command-row">
-      <input id="command" type="text" placeholder='Platte 800 x 400 mit 4 Bohrungen Ø12 Rand 30'>
-      <button id="runCommand">Ausführen</button>
-    </div>
+  <section class="bottom-panel">
     <div class="quick-actions">
       <button id="newBtn">Neu</button>
       <button id="saveBtn">Projekt speichern</button>
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
+      <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,text/plain"></label>
+      <label class="file-btn">SVG importieren<input id="svgInput" type="file" accept=".svg,image/svg+xml"></label>
       <button id="dxfBtn">DXF exportieren</button>
+      <button id="camPlanBtn">CAM-Plan exportieren</button>
+      <button id="autoCamBtn">CAM automatisch</button>
       <button id="fitBtn">Alles anzeigen</button>
     </div>
   </section>
@@ -80,6 +132,6 @@
     }
     if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   </script>
-  <script src="app-v03.js"></script>
+  <script src="app-v04.js"></script>
 </body>
 </html>
