@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <title>CutAI CAD/CAM v0.4</title>
-  <link rel="manifest" href="manifest-v04.webmanifest">
-  <link rel="stylesheet" href="styles-v04.css">
+  <title>CutAI CAD/CAM v0.5</title>
+  <link rel="manifest" href="manifest-v05.webmanifest">
+  <link rel="stylesheet" href="styles-v05.css">
 </head>
 <body>
   <header class="topbar">
-    <div><strong>CutAI CAD/CAM</strong> <span>v0.4</span></div>
+    <div><strong>CutAI CAD/CAM</strong> <span>v0.5</span></div>
     <div id="status">Bereit · mm</div>
   </header>
 
@@ -28,87 +28,119 @@
       <button id="deleteBtn">⌫<small>Löschen</small></button>
     </aside>
 
-    <section class="workspace">
-      <svg id="cad" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M10 0 L0 0 0 10" class="grid minor"/>
-          </pattern>
-          <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse">
-            <rect width="100" height="100" fill="url(#minorGrid)"/>
-            <path d="M100 0 L0 0 0 100" class="grid major"/>
-          </pattern>
-        </defs>
-        <rect id="gridBg" x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)"/>
-        <g id="geometry"></g>
-        <g id="dimensions"></g>
-        <g id="camMarkers"></g>
-        <g id="preview"></g>
-        <g id="snapLayer"></g>
-      </svg>
+    <section class="workspace-wrap">
+      <section class="workspace">
+        <svg id="cad" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M10 0 L0 0 0 10" class="grid minor"/>
+            </pattern>
+            <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="url(#minorGrid)"/>
+              <path d="M100 0 L0 0 0 100" class="grid major"/>
+            </pattern>
+          </defs>
+          <rect id="gridBg" x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)"/>
+          <g id="geometry"></g>
+          <g id="dimensions"></g>
+          <g id="camMarkers"></g>
+          <g id="preview"></g>
+          <g id="snapLayer"></g>
+        </svg>
 
-      <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
+        <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
-      <section class="properties hidden" id="properties">
-        <div class="properties-head">
-          <strong id="propTitle">Eigenschaften</strong>
-          <button id="closeProperties">×</button>
-        </div>
+        <section class="properties hidden" id="properties">
+          <div class="properties-head">
+            <strong id="propTitle">Eigenschaften</strong>
+            <button id="closeProperties">×</button>
+          </div>
 
-        <div id="propertyFields" class="property-fields"></div>
+          <div id="propertyFields" class="property-fields"></div>
 
-        <div id="camFields" class="cam-fields">
-          <div class="field">
-            <label>Technologie</label>
-            <select id="technology">
-              <option>Plasma</option>
-              <option>Laser</option>
-              <option>Autogen</option>
-              <option>Markieren</option>
-              <option>Bohren</option>
-              <option>Keine</option>
-            </select>
+          <div class="move-box">
+            <strong>Auswahl verschieben</strong>
+            <div class="property-fields">
+              <div class="field">
+                <label>ΔX (mm)</label>
+                <input id="moveX" type="number" step="0.1" value="0">
+              </div>
+              <div class="field">
+                <label>ΔY (mm)</label>
+                <input id="moveY" type="number" step="0.1" value="0">
+              </div>
+            </div>
+            <div class="move-actions">
+              <button data-nudge="-1,0">← 1</button>
+              <button data-nudge="1,0">1 →</button>
+              <button data-nudge="0,-1">↑ 1</button>
+              <button data-nudge="0,1">1 ↓</button>
+              <button id="moveApply">Versatz anwenden</button>
+            </div>
           </div>
-          <div class="field">
-            <label>Konturtyp</label>
-            <select id="contourType">
-              <option value="auto">Auto</option>
-              <option value="outside">Außen</option>
-              <option value="inside">Innen</option>
-              <option value="mark">Markieren</option>
-              <option value="drill">Bohren</option>
-              <option value="none">Keine</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Schneidrichtung</label>
-            <select id="direction">
-              <option value="cw">Im Uhrzeigersinn</option>
-              <option value="ccw">Gegen Uhrzeigersinn</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Schnittreihenfolge</label>
-            <input id="cutOrder" type="number" min="1" step="1">
-          </div>
-          <div class="field">
-            <label>Lead-In (mm)</label>
-            <input id="leadIn" type="number" step="0.1">
-          </div>
-          <div class="field">
-            <label>Lead-Out (mm)</label>
-            <input id="leadOut" type="number" step="0.1">
-          </div>
-        </div>
 
-        <div id="edgeInfo" class="edge-info hidden"></div>
+          <div id="camFields" class="cam-fields">
+            <div class="field">
+              <label>Technologie</label>
+              <select id="technology">
+                <option>Plasma</option>
+                <option>Laser</option>
+                <option>Autogen</option>
+                <option>Markieren</option>
+                <option>Bohren</option>
+                <option>Keine</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Konturtyp</label>
+              <select id="contourType">
+                <option value="auto">Auto</option>
+                <option value="outside">Außen</option>
+                <option value="inside">Innen</option>
+                <option value="mark">Markieren</option>
+                <option value="drill">Bohren</option>
+                <option value="none">Keine</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Schneidrichtung</label>
+              <select id="direction">
+                <option value="cw">Im Uhrzeigersinn</option>
+                <option value="ccw">Gegen Uhrzeigersinn</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Schnittreihenfolge</label>
+              <input id="cutOrder" type="number" min="1" step="1">
+            </div>
+            <div class="field">
+              <label>Lead-In (mm)</label>
+              <input id="leadIn" type="number" step="0.1">
+            </div>
+            <div class="field">
+              <label>Lead-Out (mm)</label>
+              <input id="leadOut" type="number" step="0.1">
+            </div>
+          </div>
 
-        <div class="prop-actions">
-          <button id="setStartBtn">Startpunkt setzen</button>
-          <button id="clearStartBtn">Startpunkt löschen</button>
-          <button id="applyProperties" class="apply-btn">Übernehmen</button>
-        </div>
+          <div id="edgeInfo" class="edge-info hidden"></div>
+
+          <div class="prop-actions">
+            <button id="setStartBtn">Startpunkt setzen</button>
+            <button id="clearStartBtn">Startpunkt löschen</button>
+            <button id="applyCamToSelection">CAM auf Auswahl übernehmen</button>
+            <button id="applyProperties" class="apply-btn">Geometrie übernehmen</button>
+          </div>
+        </section>
       </section>
+
+      <aside class="contour-panel">
+        <div class="contour-head">
+          <strong>Konturen</strong>
+          <button id="selectAllBtn">Alle</button>
+        </div>
+        <div id="contourList" class="contour-list"></div>
+      </aside>
     </section>
   </main>
 
@@ -132,6 +164,6 @@
     }
     if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   </script>
-  <script src="app-v04.js"></script>
+  <script src="app-v05.js"></script>
 </body>
 </html>
