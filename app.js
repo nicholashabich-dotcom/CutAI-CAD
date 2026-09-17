@@ -1,331 +1,61 @@
 (() => {
-  const svg = document.getElementById("cad");
-  const geometry = document.getElementById("geometry");
-  const preview = document.getElementById("preview");
-  const statusEl = document.getElementById("status");
-  const coordsEl = document.getElementById("coords");
-  const commandEl = document.getElementById("command");
-
-  const state = {
-    tool: "select",
-    shapes: [],
-    history: [],
-    selectedId: null,
-    start: null,
-    drawing: false,
-    viewBox: { x: 0, y: 0, w: 1200, h: 800 },
-    panStart: null,
-    panViewStart: null,
-    pointers: new Map(),
-    pinchStart: null
-  };
-
-  const uid = () => "s_" + Math.random().toString(36).slice(2, 9);
-
-  function setStatus(msg) { statusEl.textContent = msg; }
-
-  function snapshot() {
-    state.history.push(JSON.stringify(state.shapes));
-    if (state.history.length > 60) state.history.shift();
-  }
-
-  function undo() {
-    if (!state.history.length) return;
-    state.shapes = JSON.parse(state.history.pop());
-    state.selectedId = null;
-    render();
-  }
-
-  function svgPoint(clientX, clientY) {
-    const r = svg.getBoundingClientRect();
-    return {
-      x: state.viewBox.x + (clientX - r.left) / r.width * state.viewBox.w,
-      y: state.viewBox.y + (clientY - r.top) / r.height * state.viewBox.h
-    };
-  }
-
-  function snap(v, step = 1) { return Math.round(v / step) * step; }
-  function snappedPoint(e) {
-    const p = svgPoint(e.clientX, e.clientY);
-    return { x: snap(p.x), y: snap(p.y) };
-  }
-
-  function setViewBox() {
-    const v = state.viewBox;
-    svg.setAttribute("viewBox", `${v.x} ${v.y} ${v.w} ${v.h}`);
-  }
-
-  function shapeToElement(s) {
-    let el;
-    if (s.type === "line") {
-      el = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      [["x1", s.x1], ["y1", s.y1], ["x2", s.x2], ["y2", s.y2]].forEach(([k,v]) => el.setAttribute(k,v));
-    } else if (s.type === "rect") {
-      el = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      [["x", s.x], ["y", s.y], ["width", s.w], ["height", s.h]].forEach(([k,v]) => el.setAttribute(k,v));
-    } else if (s.type === "circle") {
-      el = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      [["cx", s.cx], ["cy", s.cy], ["r", s.r]].forEach(([k,v]) => el.setAttribute(k,v));
-    }
-    el.classList.add("shape");
-    if (s.id === state.selectedId) el.classList.add("selected");
-    el.dataset.id = s.id;
-    return el;
-  }
-
-  function render() {
-    geometry.replaceChildren();
-    state.shapes.forEach(s => geometry.appendChild(shapeToElement(s)));
-    setViewBox();
-  }
-
-  function clearPreview() { preview.replaceChildren(); }
-
-  function renderPreview(s) {
-    clearPreview();
-    const el = shapeToElement({ ...s, id: "__preview" });
-    el.classList.remove("shape");
-    el.classList.add("preview");
-    preview.appendChild(el);
-  }
-
-  function makeShape(tool, a, b) {
-    if (tool === "line") {
-      return { id: uid(), type: "line", x1:a.x, y1:a.y, x2:b.x, y2:b.y };
-    }
-    if (tool === "rect") {
-      return { id: uid(), type:"rect", x:Math.min(a.x,b.x), y:Math.min(a.y,b.y),
-        w:Math.abs(b.x-a.x), h:Math.abs(b.y-a.y) };
-    }
-    if (tool === "circle") {
-      return { id: uid(), type:"circle", cx:a.x, cy:a.y, r:Math.hypot(b.x-a.x,b.y-a.y) };
-    }
-  }
-
-  function setTool(tool) {
-    state.tool = tool;
-    state.selectedId = null;
-    document.querySelectorAll(".tool").forEach(b => b.classList.toggle("active", b.dataset.tool === tool));
-    setStatus(`${toolName(tool)} · mm`);
-    render();
-  }
-
-  function toolName(t) {
-    return ({select:"Auswahl", line:"Linie", rect:"Rechteck", circle:"Kreis", pan:"Verschieben"})[t] || t;
-  }
-
-  function selectAtTarget(target) {
-    const id = target?.dataset?.id;
-    state.selectedId = id || null;
-    render();
-  }
-
-  function deleteSelected() {
-    if (!state.selectedId) return;
-    snapshot();
-    state.shapes = state.shapes.filter(s => s.id !== state.selectedId);
-    state.selectedId = null;
-    render();
-  }
-
-  function pointerDown(e) {
-    svg.setPointerCapture?.(e.pointerId);
-    state.pointers.set(e.pointerId, {x:e.clientX,y:e.clientY});
-
-    if (state.pointers.size === 2) {
-      const pts = [...state.pointers.values()];
-      state.pinchStart = {
-        dist: Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y),
-        view: {...state.viewBox}
-      };
-      return;
-    }
-
-    const p = snappedPoint(e);
-    if (state.tool === "select") {
-      selectAtTarget(e.target);
-      return;
-    }
-    if (state.tool === "pan") {
-      state.panStart = {x:e.clientX,y:e.clientY};
-      state.panViewStart = {...state.viewBox};
-      return;
-    }
-    if (["line","rect","circle"].includes(state.tool)) {
-      state.start = p;
-      state.drawing = true;
-    }
-  }
-
-  function pointerMove(e) {
-    state.pointers.set(e.pointerId, {x:e.clientX,y:e.clientY});
-    const p = svgPoint(e.clientX, e.clientY);
-    coordsEl.textContent = `X ${p.x.toFixed(1)} · Y ${p.y.toFixed(1)} mm`;
-
-    if (state.pointers.size === 2 && state.pinchStart) {
-      const pts = [...state.pointers.values()];
-      const dist = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
-      const factor = state.pinchStart.dist / Math.max(dist, 1);
-      const newW = Math.min(10000, Math.max(50, state.pinchStart.view.w * factor));
-      const newH = Math.min(10000, Math.max(50, state.pinchStart.view.h * factor));
-      const cx = state.pinchStart.view.x + state.pinchStart.view.w/2;
-      const cy = state.pinchStart.view.y + state.pinchStart.view.h/2;
-      state.viewBox = {x:cx-newW/2, y:cy-newH/2, w:newW, h:newH};
-      setViewBox();
-      return;
-    }
-
-    if (state.tool === "pan" && state.panStart) {
-      const r = svg.getBoundingClientRect();
-      const dx = (e.clientX-state.panStart.x)/r.width*state.panViewStart.w;
-      const dy = (e.clientY-state.panStart.y)/r.height*state.panViewStart.h;
-      state.viewBox.x = state.panViewStart.x-dx;
-      state.viewBox.y = state.panViewStart.y-dy;
-      setViewBox();
-      return;
-    }
-
-    if (state.drawing && state.start) {
-      const b = snappedPoint(e);
-      renderPreview(makeShape(state.tool, state.start, b));
-    }
-  }
-
-  function pointerUp(e) {
-    const remainingBeforeDelete = state.pointers.size;
-    state.pointers.delete(e.pointerId);
-    if (remainingBeforeDelete >= 2) {
-      if (state.pointers.size < 2) state.pinchStart = null;
-      return;
-    }
-
-    if (state.tool === "pan") {
-      state.panStart = null;
-      state.panViewStart = null;
-      return;
-    }
-
-    if (state.drawing && state.start) {
-      const b = snappedPoint(e);
-      const s = makeShape(state.tool, state.start, b);
-      const valid = s && (
-        s.type === "line" ? Math.hypot(s.x2-s.x1,s.y2-s.y1) > 0.5 :
-        s.type === "rect" ? s.w > 0.5 && s.h > 0.5 :
-        s.type === "circle" ? s.r > 0.5 : false
-      );
-      if (valid) {
-        snapshot();
-        state.shapes.push(s);
-      }
-      state.drawing = false;
-      state.start = null;
-      clearPreview();
-      render();
-    }
-  }
-
-  svg.addEventListener("pointerdown", pointerDown);
-  svg.addEventListener("pointermove", pointerMove);
-  svg.addEventListener("pointerup", pointerUp);
-  svg.addEventListener("pointercancel", pointerUp);
-  svg.addEventListener("wheel", e => {
-    e.preventDefault();
-    const p = svgPoint(e.clientX,e.clientY);
-    const factor = e.deltaY > 0 ? 1.12 : 0.89;
-    const nw = Math.min(10000,Math.max(50,state.viewBox.w*factor));
-    const nh = Math.min(10000,Math.max(50,state.viewBox.h*factor));
-    const rx=(p.x-state.viewBox.x)/state.viewBox.w, ry=(p.y-state.viewBox.y)/state.viewBox.h;
-    state.viewBox={x:p.x-rx*nw,y:p.y-ry*nh,w:nw,h:nh};
-    setViewBox();
-  }, {passive:false});
-
-  document.querySelectorAll(".tool").forEach(b => b.addEventListener("click",()=>setTool(b.dataset.tool)));
-  document.getElementById("undoBtn").addEventListener("click", undo);
-  document.getElementById("deleteBtn").addEventListener("click", deleteSelected);
-
-  document.getElementById("newBtn").addEventListener("click", () => {
-    snapshot(); state.shapes=[]; state.selectedId=null; render(); setStatus("Neues Projekt · mm");
-  });
-
-  document.getElementById("saveBtn").addEventListener("click", () => {
-    const project = {
-      schema: "cutai-cad/0.1",
-      units: "mm",
-      created: new Date().toISOString(),
-      shapes: state.shapes
-    };
-    const blob = new Blob([JSON.stringify(project,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "cutai-project.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  document.getElementById("loadInput").addEventListener("change", async e => {
-    const f = e.target.files?.[0]; if (!f) return;
-    try {
-      const project = JSON.parse(await f.text());
-      if (!Array.isArray(project.shapes)) throw new Error("Ungültig");
-      snapshot(); state.shapes = project.shapes; state.selectedId=null; render(); fitAll();
-      setStatus("Projekt geladen · mm");
-    } catch {
-      setStatus("Projektdatei konnte nicht geladen werden");
-    } finally { e.target.value=""; }
-  });
-
-  function fitAll() {
-    if (!state.shapes.length) {
-      state.viewBox={x:0,y:0,w:1200,h:800}; render(); return;
-    }
-    let xs=[], ys=[];
-    for (const s of state.shapes) {
-      if (s.type==="line") { xs.push(s.x1,s.x2); ys.push(s.y1,s.y2); }
-      if (s.type==="rect") { xs.push(s.x,s.x+s.w); ys.push(s.y,s.y+s.h); }
-      if (s.type==="circle") { xs.push(s.cx-s.r,s.cx+s.r); ys.push(s.cy-s.r,s.cy+s.r); }
-    }
-    const minX=Math.min(...xs), maxX=Math.max(...xs), minY=Math.min(...ys), maxY=Math.max(...ys);
-    const pad=Math.max(50,(maxX-minX+maxY-minY)*.08);
-    state.viewBox={x:minX-pad,y:minY-pad,w:Math.max(100,maxX-minX+2*pad),h:Math.max(100,maxY-minY+2*pad)};
-    render();
-  }
-  document.getElementById("fitBtn").addEventListener("click", fitAll);
-
-  function runCommand(raw) {
-    const cmd = raw.trim().replace(/,/g,".");
-    if (!cmd) return;
-
-    let m = cmd.match(/(?:platte|rechteck)\s+(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);
-    if (m) {
-      const w=+m[1], h=+m[2];
-      snapshot();
-      state.shapes.push({id:uid(),type:"rect",x:0,y:0,w,h});
-      render(); fitAll(); setStatus(`Platte ${w} × ${h} mm erstellt`);
-      return;
-    }
-
-    m = cmd.match(/kreis\s*(?:ø|⌀|durchmesser|d)?\s*(\d+(?:\.\d+)?)\s*(?:bei|@)\s*(-?\d+(?:\.\d+)?)\s*[,;/ ]\s*(-?\d+(?:\.\d+)?)/i);
-    if (m) {
-      const d=+m[1], x=+m[2], y=+m[3];
-      snapshot();
-      state.shapes.push({id:uid(),type:"circle",cx:x,cy:y,r:d/2});
-      render(); setStatus(`Kreis Ø${d} bei ${x}, ${y} erstellt`);
-      return;
-    }
-
-    m = cmd.match(/linie\s+von\s+(-?\d+(?:\.\d+)?)\s*[,;/ ]\s*(-?\d+(?:\.\d+)?)\s+(?:nach|bis)\s+(-?\d+(?:\.\d+)?)\s*[,;/ ]\s*(-?\d+(?:\.\d+)?)/i);
-    if (m) {
-      snapshot();
-      state.shapes.push({id:uid(),type:"line",x1:+m[1],y1:+m[2],x2:+m[3],y2:+m[4]});
-      render(); setStatus("Linie erstellt");
-      return;
-    }
-
-    setStatus("Befehl noch nicht verstanden · V0.1 kann Platte, Kreis und Linie");
-  }
-
-  document.getElementById("runCommand").addEventListener("click",()=>runCommand(commandEl.value));
-  commandEl.addEventListener("keydown",e=>{ if(e.key==="Enter") runCommand(commandEl.value); });
-
-  render();
+const NS="http://www.w3.org/2000/svg",svg=document.getElementById("cad"),geometry=document.getElementById("geometry"),dimensions=document.getElementById("dimensions"),preview=document.getElementById("preview"),snapLayer=document.getElementById("snapLayer"),statusEl=document.getElementById("status"),coordsEl=document.getElementById("coords"),commandEl=document.getElementById("command"),properties=document.getElementById("properties"),propertyFields=document.getElementById("propertyFields"),propTitle=document.getElementById("propTitle");
+const state={tool:"select",shapes:[],history:[],selectedId:null,start:null,drawing:false,viewBox:{x:0,y:0,w:1200,h:800},panStart:null,panViewStart:null,pointers:new Map(),pinchStart:null,snapEnabled:true,drag:null};
+const uid=()=> "s_"+Math.random().toString(36).slice(2,9),num=v=>Number.parseFloat(v)||0,fmt=v=>(Math.round(v*100)/100).toString();
+function setStatus(m){statusEl.textContent=m} function snapshot(){state.history.push(JSON.stringify(state.shapes));if(state.history.length>60)state.history.shift()}
+function undo(){if(!state.history.length)return;state.shapes=JSON.parse(state.history.pop());state.selectedId=null;hideProperties();render()}
+function svgPoint(cx,cy){const r=svg.getBoundingClientRect();return{x:state.viewBox.x+(cx-r.left)/r.width*state.viewBox.w,y:state.viewBox.y+(cy-r.top)/r.height*state.viewBox.h}}
+function tol(px=16){const r=svg.getBoundingClientRect();return state.viewBox.w/Math.max(r.width,1)*px}
+function snapCandidates(){const c=[];for(const s of state.shapes){if(s.type==="line"){c.push({x:s.x1,y:s.y1,type:"Endpunkt"},{x:s.x2,y:s.y2,type:"Endpunkt"},{x:(s.x1+s.x2)/2,y:(s.y1+s.y2)/2,type:"Mittelpunkt"})}
+else if(s.type==="rect"){c.push({x:s.x,y:s.y,type:"Ecke"},{x:s.x+s.w,y:s.y,type:"Ecke"},{x:s.x,y:s.y+s.h,type:"Ecke"},{x:s.x+s.w,y:s.y+s.h,type:"Ecke"},{x:s.x+s.w/2,y:s.y+s.h/2,type:"Mittelpunkt"})}
+else if(s.type==="circle"){c.push({x:s.cx,y:s.cy,type:"Mittelpunkt"},{x:s.cx+s.r,y:s.cy,type:"Quadrant"},{x:s.cx-s.r,y:s.cy,type:"Quadrant"},{x:s.cx,y:s.cy+s.r,type:"Quadrant"},{x:s.cx,y:s.cy-s.r,type:"Quadrant"})}}return c}
+function snappedRaw(p){if(!state.snapEnabled)return{...p,type:null};let best=null,bd=Infinity;for(const c of snapCandidates()){const d=Math.hypot(c.x-p.x,c.y-p.y);if(d<tol()&&d<bd){best=c;bd=d}}if(best)return{...best};return{x:Math.round(p.x/10)*10,y:Math.round(p.y/10)*10,type:"Raster"}}
+function setViewBox(){const v=state.viewBox;svg.setAttribute("viewBox",`${v.x} ${v.y} ${v.w} ${v.h}`)}
+function el(n,a={},cls=""){const e=document.createElementNS(NS,n);for(const[k,v]of Object.entries(a))e.setAttribute(k,v);if(cls)e.setAttribute("class",cls);return e}
+function shapeEl(s){let e;if(s.type==="line")e=el("line",{x1:s.x1,y1:s.y1,x2:s.x2,y2:s.y2});if(s.type==="rect")e=el("rect",{x:s.x,y:s.y,width:s.w,height:s.h});if(s.type==="circle")e=el("circle",{cx:s.cx,cy:s.cy,r:s.r});e.classList.add("shape");if(s.id===state.selectedId)e.classList.add("selected");e.dataset.id=s.id;return e}
+function renderDims(){dimensions.replaceChildren();const s=state.shapes.find(x=>x.id===state.selectedId);if(!s)return;if(s.type==="rect"){let t=el("text",{x:s.x+s.w/2,y:s.y-18,"text-anchor":"middle"},"dim-text");t.textContent=`${fmt(s.w)} mm`;dimensions.append(t);t=el("text",{x:s.x+s.w+20,y:s.y+s.h/2},"dim-text");t.textContent=`${fmt(s.h)} mm`;dimensions.append(t)}
+if(s.type==="circle"){const t=el("text",{x:s.cx,y:s.cy-s.r-14,"text-anchor":"middle"},"dim-text");t.textContent=`Ø ${fmt(s.r*2)} mm`;dimensions.append(t)}
+if(s.type==="line"){const t=el("text",{x:(s.x1+s.x2)/2,y:(s.y1+s.y2)/2-12,"text-anchor":"middle"},"dim-text");t.textContent=`${fmt(Math.hypot(s.x2-s.x1,s.y2-s.y1))} mm`;dimensions.append(t)}}
+function render(){geometry.replaceChildren();state.shapes.forEach(s=>geometry.appendChild(shapeEl(s)));renderDims();setViewBox()}
+function renderSnap(s){snapLayer.replaceChildren();if(!state.snapEnabled||!s)return;const r=tol(6);snapLayer.append(el("circle",{cx:s.x,cy:s.y,r},"snap-marker"),el("line",{x1:s.x-r*1.5,y1:s.y,x2:s.x+r*1.5,y2:s.y},"snap-marker"),el("line",{x1:s.x,y1:s.y-r*1.5,x2:s.x,y2:s.y+r*1.5},"snap-marker"))}
+function make(tool,a,b){if(tool==="line")return{id:uid(),type:"line",x1:a.x,y1:a.y,x2:b.x,y2:b.y};if(tool==="rect")return{id:uid(),type:"rect",x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(b.x-a.x),h:Math.abs(b.y-a.y)};if(tool==="circle")return{id:uid(),type:"circle",cx:a.x,cy:a.y,r:Math.hypot(b.x-a.x,b.y-a.y)}}
+function setTool(t){state.tool=t;document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("active",b.dataset.tool===t));setStatus(`${t} · mm`)}
+function findShape(id){return state.shapes.find(s=>s.id===id)}
+function hideProperties(){properties.classList.add("hidden")}
+function showProperties(s){if(!s)return hideProperties();properties.classList.remove("hidden");propertyFields.replaceChildren();let f=[];if(s.type==="rect"){propTitle.textContent="Rechteck";f=[["x","X",s.x],["y","Y",s.y],["w","Breite",s.w],["h","Höhe",s.h]]}
+if(s.type==="circle"){propTitle.textContent="Kreis";f=[["cx","Mittelpunkt X",s.cx],["cy","Mittelpunkt Y",s.cy],["d","Durchmesser",s.r*2]]}
+if(s.type==="line"){propTitle.textContent="Linie";f=[["x1","X1",s.x1],["y1","Y1",s.y1],["x2","X2",s.x2],["y2","Y2",s.y2]]}
+for(const[k,l,v]of f){const w=document.createElement("div");w.className="field";const lab=document.createElement("label");lab.textContent=l+" (mm)";const inp=document.createElement("input");inp.type="number";inp.step="0.1";inp.value=fmt(v);inp.dataset.key=k;w.append(lab,inp);propertyFields.appendChild(w)}}
+document.getElementById("closeProperties").onclick=hideProperties;
+document.getElementById("applyProperties").onclick=()=>{const s=findShape(state.selectedId);if(!s)return;snapshot();const v={};propertyFields.querySelectorAll("input").forEach(i=>v[i.dataset.key]=num(i.value));if(s.type==="rect")Object.assign(s,{x:v.x,y:v.y,w:Math.abs(v.w),h:Math.abs(v.h)});if(s.type==="circle")Object.assign(s,{cx:v.cx,cy:v.cy,r:Math.abs(v.d)/2});if(s.type==="line")Object.assign(s,{x1:v.x1,y1:v.y1,x2:v.x2,y2:v.y2});render();showProperties(s);setStatus("Maße übernommen")}
+function selectTarget(t){state.selectedId=t?.dataset?.id||null;render();showProperties(findShape(state.selectedId))}
+function del(){if(!state.selectedId)return;snapshot();state.shapes=state.shapes.filter(s=>s.id!==state.selectedId);state.selectedId=null;hideProperties();render()}
+function move(s,dx,dy){if(s.type==="rect"){s.x+=dx;s.y+=dy}if(s.type==="circle"){s.cx+=dx;s.cy+=dy}if(s.type==="line"){s.x1+=dx;s.y1+=dy;s.x2+=dx;s.y2+=dy}}
+function down(e){svg.setPointerCapture?.(e.pointerId);state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(state.pointers.size===2){const p=[...state.pointers.values()];state.pinchStart={dist:Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y),view:{...state.viewBox}};return}
+if(state.tool==="select"){const id=e.target?.dataset?.id;selectTarget(e.target);if(id){state.drag={id,start:svgPoint(e.clientX,e.clientY),original:JSON.parse(JSON.stringify(findShape(id))),moved:false}}return}
+if(state.tool==="pan"){state.panStart={x:e.clientX,y:e.clientY};state.panViewStart={...state.viewBox};return}
+if(["line","rect","circle"].includes(state.tool)){const s=snappedRaw(svgPoint(e.clientX,e.clientY));state.start={x:s.x,y:s.y};state.drawing=true;renderSnap(s)}}
+function movePointer(e){state.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const raw=svgPoint(e.clientX,e.clientY),sp=snappedRaw(raw);coordsEl.textContent=`X ${sp.x.toFixed(1)} · Y ${sp.y.toFixed(1)} mm · ${sp.type||""}`;renderSnap(sp);
+if(state.pointers.size===2&&state.pinchStart){const p=[...state.pointers.values()],d=Math.hypot(p[1].x-p[0].x,p[1].y-p[0].y),f=state.pinchStart.dist/Math.max(d,1),nw=Math.min(10000,Math.max(50,state.pinchStart.view.w*f)),nh=Math.min(10000,Math.max(50,state.pinchStart.view.h*f)),cx=state.pinchStart.view.x+state.pinchStart.view.w/2,cy=state.pinchStart.view.y+state.pinchStart.view.h/2;state.viewBox={x:cx-nw/2,y:cy-nh/2,w:nw,h:nh};setViewBox();return}
+if(state.tool==="select"&&state.drag){const p=svgPoint(e.clientX,e.clientY),dx=p.x-state.drag.start.x,dy=p.y-state.drag.start.y;if(Math.hypot(dx,dy)>tol(3))state.drag.moved=true;const s=findShape(state.drag.id);Object.assign(s,JSON.parse(JSON.stringify(state.drag.original)));move(s,dx,dy);render();return}
+if(state.tool==="pan"&&state.panStart){const r=svg.getBoundingClientRect(),dx=(e.clientX-state.panStart.x)/r.width*state.panViewStart.w,dy=(e.clientY-state.panStart.y)/r.height*state.panViewStart.h;state.viewBox.x=state.panViewStart.x-dx;state.viewBox.y=state.panViewStart.y-dy;setViewBox();return}
+if(state.drawing&&state.start){preview.replaceChildren();const pe=shapeEl({...make(state.tool,state.start,{x:sp.x,y:sp.y}),id:"p"});pe.classList.remove("shape");pe.classList.add("preview");preview.appendChild(pe)}}
+function up(e){const count=state.pointers.size;state.pointers.delete(e.pointerId);if(count>=2){if(state.pointers.size<2)state.pinchStart=null;return}
+if(state.tool==="select"&&state.drag){if(state.drag.moved){const s=findShape(state.drag.id),final=JSON.parse(JSON.stringify(s));Object.assign(s,state.drag.original);snapshot();Object.assign(s,final);render();showProperties(s)}state.drag=null;return}
+if(state.tool==="pan"){state.panStart=null;state.panViewStart=null;return}
+if(state.drawing&&state.start){const sp=snappedRaw(svgPoint(e.clientX,e.clientY)),s=make(state.tool,state.start,{x:sp.x,y:sp.y});const ok=s&&(s.type==="line"?Math.hypot(s.x2-s.x1,s.y2-s.y1)>.5:s.type==="rect"?s.w>.5&&s.h>.5:s.r>.5);if(ok){snapshot();state.shapes.push(s);state.selectedId=s.id}state.drawing=false;state.start=null;preview.replaceChildren();render();if(ok)showProperties(s)}}
+svg.addEventListener("pointerdown",down);svg.addEventListener("pointermove",movePointer);svg.addEventListener("pointerup",up);svg.addEventListener("pointercancel",up);
+document.querySelectorAll(".tool").forEach(b=>b.onclick=()=>setTool(b.dataset.tool));document.getElementById("undoBtn").onclick=undo;document.getElementById("deleteBtn").onclick=del;
+document.getElementById("snapBtn").onclick=()=>{state.snapEnabled=!state.snapEnabled;document.getElementById("snapBtn").classList.toggle("active",state.snapEnabled);if(!state.snapEnabled)snapLayer.replaceChildren();setStatus(state.snapEnabled?"Fang aktiviert":"Fang deaktiviert")}
+document.getElementById("newBtn").onclick=()=>{snapshot();state.shapes=[];state.selectedId=null;hideProperties();render();setStatus("Neues Projekt")}
+document.getElementById("saveBtn").onclick=()=>{const blob=new Blob([JSON.stringify({schema:"cutai-cad/0.2",units:"mm",shapes:state.shapes},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="cutai-project.json";a.click()}
+document.getElementById("loadInput").onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const p=JSON.parse(await f.text());snapshot();state.shapes=p.shapes||[];state.selectedId=null;hideProperties();render();setStatus("Projekt geladen")}catch{setStatus("Projektdatei ungültig")}e.target.value=""}
+function fitAll(){if(!state.shapes.length){state.viewBox={x:0,y:0,w:1200,h:800};render();return}const xs=[],ys=[];for(const s of state.shapes){if(s.type==="line"){xs.push(s.x1,s.x2);ys.push(s.y1,s.y2)}if(s.type==="rect"){xs.push(s.x,s.x+s.w);ys.push(s.y,s.y+s.h)}if(s.type==="circle"){xs.push(s.cx-s.r,s.cx+s.r);ys.push(s.cy-s.r,s.cy+s.r)}}const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),pad=Math.max(50,(maxX-minX+maxY-minY)*.08);state.viewBox={x:minX-pad,y:minY-pad,w:Math.max(100,maxX-minX+2*pad),h:Math.max(100,maxY-minY+2*pad)};render()}
+document.getElementById("fitBtn").onclick=fitAll;
+function runCommand(raw){const cmd=raw.trim().replace(/,/g,".");if(!cmd)return;let m=cmd.match(/(?:platte|rechteck)\s+(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?).*?4\s+(?:bohrungen|löcher).*?(?:ø|⌀|durchmesser)?\s*(\d+(?:\.\d+)?).*?(?:rand|abstand)\s*(\d+(?:\.\d+)?)/i);
+if(m){const[w,h,d,edge]=m.slice(1).map(Number);snapshot();const p={id:uid(),type:"rect",x:0,y:0,w,h};state.shapes.push(p);[[edge,edge],[w-edge,edge],[edge,h-edge],[w-edge,h-edge]].forEach(([x,y])=>state.shapes.push({id:uid(),type:"circle",cx:x,cy:y,r:d/2}));state.selectedId=p.id;render();fitAll();showProperties(p);setStatus(`Platte ${w} × ${h} mit 4× Ø${d}`);return}
+m=cmd.match(/(?:platte|rechteck)\s+(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)/i);if(m){const w=+m[1],h=+m[2];snapshot();const s={id:uid(),type:"rect",x:0,y:0,w,h};state.shapes.push(s);state.selectedId=s.id;render();fitAll();showProperties(s);return}
+m=cmd.match(/kreis\s*(?:ø|⌀|durchmesser|d)?\s*(\d+(?:\.\d+)?)\s*(?:bei|@)\s*(-?\d+(?:\.\d+)?)\s*[,;/ ]\s*(-?\d+(?:\.\d+)?)/i);if(m){const d=+m[1],x=+m[2],y=+m[3];snapshot();const s={id:uid(),type:"circle",cx:x,cy:y,r:d/2};state.shapes.push(s);state.selectedId=s.id;render();showProperties(s);return}
+setStatus("Befehl noch nicht verstanden")}
+document.getElementById("runCommand").onclick=()=>runCommand(commandEl.value);commandEl.addEventListener("keydown",e=>{if(e.key==="Enter")runCommand(commandEl.value)});render();
 })();

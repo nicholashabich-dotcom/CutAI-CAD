@@ -1,73 +1,79 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#111827" />
-  <title>CutAI CAD v0.1</title>
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>CutAI CAD v0.2</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">
-      <strong>CutAI CAD</strong>
-      <span>v0.1</span>
-    </div>
-    <div class="status" id="status">Bereit · mm</div>
+    <div><strong>CutAI CAD</strong> <span>v0.2</span></div>
+    <div id="status">Bereit · mm</div>
   </header>
 
   <main class="app">
-    <aside class="toolbar" aria-label="Werkzeuge">
+    <aside class="toolbar">
       <button class="tool active" data-tool="select">↖<small>Auswahl</small></button>
       <button class="tool" data-tool="line">╱<small>Linie</small></button>
       <button class="tool" data-tool="rect">▭<small>Rechteck</small></button>
       <button class="tool" data-tool="circle">○<small>Kreis</small></button>
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
+      <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
       <button id="undoBtn">↶<small>Zurück</small></button>
       <button id="deleteBtn">⌫<small>Löschen</small></button>
     </aside>
 
     <section class="workspace">
-      <svg id="cad" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+      <svg id="cad" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" class="grid minor" />
+            <path d="M10 0 L0 0 0 10" class="grid minor"/>
           </pattern>
           <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse">
-            <rect width="100" height="100" fill="url(#minorGrid)" />
-            <path d="M 100 0 L 0 0 0 100" class="grid major" />
+            <rect width="100" height="100" fill="url(#minorGrid)"/>
+            <path d="M100 0 L0 0 0 100" class="grid major"/>
           </pattern>
         </defs>
-        <rect id="gridBg" x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)" />
+        <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)"/>
         <g id="geometry"></g>
+        <g id="dimensions"></g>
         <g id="preview"></g>
+        <g id="snapLayer"></g>
       </svg>
 
       <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
+
+      <section class="properties hidden" id="properties">
+        <div class="properties-head">
+          <strong id="propTitle">Eigenschaften</strong>
+          <button id="closeProperties">×</button>
+        </div>
+        <div id="propertyFields" class="property-fields"></div>
+        <button id="applyProperties" class="apply-btn">Maße übernehmen</button>
+      </section>
     </section>
   </main>
 
   <section class="command-panel">
-    <label for="command">KI-Befehl <span class="beta">lokaler Parser V0.1</span></label>
+    <label>KI-Befehl <span class="beta">lokaler CAD-Parser V0.2</span></label>
     <div class="command-row">
-      <input id="command" type="text"
-        placeholder='z. B. "Platte 800 x 400" oder "Kreis Ø12 bei 100,80"' />
+      <input id="command" type="text" placeholder='z. B. "Platte 800 x 400 mit 4 Bohrungen Ø12 Rand 30"'>
       <button id="runCommand">Ausführen</button>
     </div>
     <div class="quick-actions">
       <button id="newBtn">Neu</button>
       <button id="saveBtn">Projekt speichern</button>
-      <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json" /></label>
+      <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
       <button id="fitBtn">Alles anzeigen</button>
     </div>
   </section>
 
   <script src="app.js"></script>
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(() => {});
-    }
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
   </script>
 </body>
 </html>
