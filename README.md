@@ -1,46 +1,106 @@
-# CutAI CAD/CAM v0.7.2
+# CutAI CAD/CAM v0.8.0
 
-Diese Version baut auf v0.7.1 auf und gleicht drei zentrale Punkte stärker an den dokumentierten ASPER-Workflow an: Abschnitte, Werkzeugfarben und sichtbare Fasen.
+v0.8.0 baut den Prototyp zu einem strukturierten CAD/CAM-Kern aus. Grundlage sind die bereitgestellten ASPER-5.0-Handbücher, Schulungsunterlagen, Konfigurationsdateien, Beispiel-DXF-Dateien und die statische Analyse der relevanten MicroStep-Module. CutAI bleibt eine eigenständig entwickelte Anwendung: keine ASPER-Grafiken, Icons, Programmcodes oder Binärmodule werden eingebettet.
 
-## Neu in v0.7.2
+## Neu in v0.8.0
 
-- Werkzeugansicht als Standard: verschiedene Werkzeuge erhalten unterschiedliche Farben.
-- Zusätzliche Ansichtsmodi: Normal, Werkzeuge und Fasen.
-- Werkzeuglegende mit Code, Name und Farbe.
-- Sichtbare Fasenmarkierung direkt an der Geometrie:
-  - farbige Hervorhebung,
-  - Trennmarken an Anfang/Ende,
-  - Beschriftung wie `V↑ 30°`, `Y↑ 30° · Steg 5`, `K↕ 30°/30°`.
-- Werkzeug- und Fasenfarbe bleibt auch nach DXF-Import sichtbar.
-- Neuer Modus **Abschnitt trennen**:
-  - bei einer geschlossenen Kontur setzt der erste Klick den ersten Abschnittspunkt,
-  - der zweite Klick erzeugt getrennte Abschnitte,
-  - weitere Teilungen sind möglich,
-  - jeder Abschnitt kann ein eigenes Werkzeug, eigene Fase und eigene CAM-Parameter erhalten.
-- Abschnittsgrenzen werden in der Zeichnung markiert.
-- Abschnitte einer geschlossenen Kette werden gemeinsam als Kette geführt.
-- **Abschnitte verbinden** verbindet ausgewählte, zusammenhängende Abschnitte wieder, wenn ihre CAM-/Fasenparameter identisch sind.
-- CAM-Plan v0.7.2 enthält `chainId`, `chainName`, `sectionIndex` und `chainClosed`.
-- Projektformat wurde auf `cutai-cad/0.7.2` erweitert; v0.7/v0.7.1 und v0.6 werden weiterhin geladen.
-- Tastenkürzel `X` wechselt die Ansichtsmodi; `L` aktiviert Abschnitt trennen.
+### Abschnitt / Technologie
+Jeder Abschnitt besitzt jetzt zusätzlich zu Werkzeug, Konturtyp und Fase eigene technologische Attribute:
+- Bearbeitung aktiv / deaktiviert
+- Priorität
+- relative Geschwindigkeit und optionale eigene Geschwindigkeit
+- Leistung
+- ATHC-Modus
+- Kopf- und Portalindex
+- IHS-Punkt und IHS-Versatz
+- Vorstechen
+- Kühlen vor dem Abschnitt
+- Werkzeughöhe sperren
+- Kettenschnitt-Metadatum
+- Schneidfolge nach dem Abschnitt trennen
+- Überlappung und Loop-Metadatum
 
-## ASPER-Abgleich
+Die Struktur orientiert sich an den dokumentierten ASPER-Funktionen für Abschnitte und Entity-Technologieparameter, die Implementierung und Oberfläche sind eigenständig.
 
-Der Schulungsleitfaden beschreibt ausdrücklich, dass Fasen nicht auf einzelne Kanten, sondern auf komplette Abschnitte angewendet werden. Deshalb müssen die benötigten Kanten vorher mit **Abschnitt -> Auftrennen** freigestellt werden. Außerdem empfiehlt die Schulung den Ansichtsmodus **Werkzeug**, um verschiedene Werkzeuge in unterschiedlichen Farben zu erkennen.
+### Mikrostege
+- neues Werkzeug **Mikrosteg setzen** in der linken Werkzeugleiste
+- Mikrostege werden punktweise auf einer Kontur gesetzt
+- Länge und „am Ende nachschneiden“ werden gespeichert
+- Mikrostege werden sichtbar markiert
+- alle Mikrostege der Auswahl können gelöscht werden
+- neutraler CAM-Plan enthält die Mikrosteg-Daten
 
-Die v0.7.2-Darstellung folgt diesem Grundprinzip, ohne proprietäre ASPER-Grafiken oder Maschinenlogik zu kopieren.
+### An- und Ausläufe
+- Linie oder Bogen
+- Länge, Winkel und Radius
+- senkrechter Anteil für Fasen-Anläufe
+- Anlauf/Auslauf per Aktion hinzufügen oder entfernen
+- Projektstandard für Anlauflänge
+- Fasen-Anlauffaktor und Standardwert für senkrechten Fasen-Anlauf
 
-## DXF-Testdateien
+### Ansichtsmodi
+`X` schaltet zyklisch durch:
+- Normal
+- Werkzeuge
+- Fasen
+- Geschwindigkeit
+- ATHC
+- Kopf
+- Portal
+- Leistung
+- Schneidfolge
 
-Die bereitgestellten Dateien wurden mit dem aktuellen DXF-Kern geprüft:
+### Tafel- und Projekteinstellungen
+- Tafelbreite / Tafelhöhe
+- DXF-Einlesetoleranz
+- Schachtelrichtung X/Y als Vorbereitung für eigenes Nesting
+- Schnittfugenmodus: Maschinensteuerung / CutAI offline / keine
+- Standard-Mikrosteg
+- Standard-Anlauf
+- neutrale NC-Ausgabeparameter: relative Koordinaten, Kommentare, Werkzeugwechsel erzwingen, Bögen als Polylinien, Approximationstoleranz
+- NC-Start- und Endposition als neutrale Projektmetadaten
 
-- `2Q001692.DXF`: 1 geschlossene Kontur aus 8 Linien/Bögen erkannt.
-- `3Q100711.DXF`: 6 geschlossene Konturen erkannt.
-- `KELEM-A.DXF`: 2 geschlossene Konturen erkannt.
-- `KELEM-E.DXF`: 2 geschlossene Konturen erkannt.
+### Schneidfolge
+- automatische Reihenfolge berücksichtigt jetzt deaktivierte Abschnitte und Abschnittsprioritäten
+- manuelle Reihenfolge bleibt vorhanden
+- formaler Reihenfolgetest bleibt vorhanden
+- deaktivierte Abschnitte erhalten keine aktive Bearbeitungsreihenfolge
 
-POINT-Objekte werden wie im ASPER-Handbuch nicht als Schneidgeometrie interpretiert.
+### Simulation
+- neutrale CAM-Simulation
+- Schritt vor
+- Schritt zurück
+- Reset
+- aktueller Bearbeitungsabschnitt wird hervorgehoben
+- Schnitt- und Eilweglänge werden berechnet
 
-## Sicherheit
+### Funktionsregister
+Der Button **Funktionsregister** zeigt direkt in CutAI, welche ASPER-Funktionsbereiche bereits umgesetzt, teilweise umgesetzt oder noch geplant sind. Die ausführlichere Matrix liegt in `ASPER_FEATURE_MATRIX.md`.
 
-CutAI erzeugt weiterhin **kein ausführbares Maschinen-NC**. Postprozessoren und M-Codes bleiben Referenzwissen, bis Maschinenkonfiguration und Gutprogramme sicher validiert sind.
+## Wichtiger Sicherheitsstand
+
+CutAI v0.8.0 erzeugt weiterhin **kein ausführbares Maschinen-NC**. DIN-/ESSI-/Postprozessor-Informationen werden nur als Referenz und Metadaten geführt, bis die maschinenspezifischen Konfigurationen und bekannte Gutprogramme sicher gegengeprüft werden können.
+
+## Teststand
+
+Geprüft wurden unter anderem:
+- JavaScript-Syntax aller Module
+- Start der Anwendung im Headless-Browser ohne JavaScript-Fehler
+- alle 9 Ansichtsmodi
+- Projekt-/Maschinendialog
+- Feature-Register
+- DXF-Import
+- Technologiefelder
+- automatische Reihenfolge
+- Simulation Schritt vor/zurück/reset
+- Mikrosteg setzen
+- CAM-Prüfung
+- neutraler CAM-Plan v0.8.0
+
+DXF-Regression:
+- `2Q001692.DXF`: 1 geschlossene Kontur, 8 Geometriesegmente
+- `3Q100711.DXF`: 6 geschlossene Konturen, 12 Geometriesegmente
+- `KELEM-A.DXF`: 2 geschlossene Konturen, 11 Geometriesegmente
+- `KELEM-E.DXF`: 2 geschlossene Konturen, 16 Geometriesegmente
+
+Siehe `TEST_REPORT.md`.

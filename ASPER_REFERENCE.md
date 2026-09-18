@@ -1,49 +1,62 @@
-# ASPER / MicroStep Referenz für CutAI v0.7.2
+# ASPER-Referenz für CutAI v0.8.0
 
-## Dokumentierter Workflow
+Diese Datei dokumentiert, welche bereitgestellten Quellen die Architekturentscheidungen von CutAI beeinflusst haben. Es werden Funktionsprinzipien und technische Begriffe als Referenz verwendet, nicht ASPER-Quellcode oder ASPER-Oberflächengrafiken.
 
-Die bereitgestellten ASPER-Unterlagen bestätigen die interne Modellierung, die CutAI jetzt verwendet:
+## Dokumentationsquellen
 
-- **Entity**: Linie, Polylinie, Kreis oder Bogen.
-- **Section / Abschnitt**: zusammenhängende Entities mit gemeinsamen technologischen Eigenschaften.
-- **Chain / Kette**: Gruppe angrenzender Abschnitte; ein Teil besitzt eine Außenkette und ggf. Innenketten.
-- Fasen werden auf einen **kompletten Abschnitt** angewendet.
-- Für unterschiedliche Bearbeitungen an einzelnen Kanten muss eine Kette deshalb vorher in mehrere Abschnitte aufgetrennt werden.
+### ASPER 5.0 User Manual, August 2023
+Wichtige Bereiche für v0.8.0:
+- S. 20 ff.: Chain / Section / technologische Struktur
+- S. 103-105: farbcodierte Ansichtsmodi, u.a. Normal, Tools und ATHC
+- S. 109: Entity-Technologieparameter, u.a. Kühlen, eigene Technologiegeschwindigkeit und ATHC-Modi
+- S. 132-134: Schnitt an/aus, Kompensation, Vorstechen, IHS-Versatz und Priorität
+- S. 140 ff.: Fasenschnitt
+- S. 150-152: An- und Ausläufe hinzufügen, entfernen und ändern
+- S. 155-157: Mikrostege und deren Eigenschaften
+- S. 157-160: automatische/manuelle Schneidfolge und Prüfung
+- S. 175-176: globale Mikrosteg- sowie An-/Auslaufparameter
+- S. 203-204: Ausgabeparameter wie relative Koordinaten, Kommentare, erzwungener Werkzeugwechsel und Bögen als Polylinien
+- S. 207 ff.: NC-Programmeinstellungen und Kompensationsoptionen
 
-Der Schulungsleitfaden Asper Bevel 5.0 beschreibt auf Seite 73 ausdrücklich das Auftrennen der Außenkontur mit Fangpunkt und Befehl **Abschnitt auftrennen**. Seite 75 zeigt anschließend, dass die Fasenparameter auf den gewünschten Abschnitt angewendet werden.
+### Schulungsunterlagen Asper 5.0
+- S. 35-36: Schnittfugenkompensation und Werkzeugzuordnung; Werkzeugansicht mit unterschiedlichen Farben
+- S. 70: Fasenarten V oben/unten, Y oben/unten, X und K sowie A-/B-Achsen-Konzept
+- S. 71: vollständiger Bevel-Arbeitsablauf
+- S. 73-75: Abschnitte für einzelne Fasen auftrennen; Fasenparameter Alfa1/Alfa2, TP und TN
+- S. 80-85: gleichbleibende Schräge und Corner-Loops
 
-## Werkzeugfarben
+### NC-Kodesimulator Bedienungshandbuch
+- S. 4-5: Darstellung von Tafelkontur, Sollkontur, kompensiertem Werkzeugpfad, Startpunkt und Verfahrwegen
+- S. 11-12: Simulation, Einzelschritt und Simulationssteuerung
 
-Der Schulungsleitfaden Asper 5.0, Seite 36, empfiehlt den Ansichtsmodus **Werkzeug**, um unterschiedliche Werkzeuge in unterschiedlichen Farben zu sehen.
+## Konfigurationen
 
-Das ASPER 5.0 User Manual beschreibt auf den Seiten 103-105 mehrere farbcodierte Ansichtsmodi. Im Werkzeugmodus werden gerade Schnitte und Fasenschnitte farblich unterschieden.
+- `param.xml`: Werkzeugprofil `PrA-QH`, Werkzeugcodes und Fähigkeiten
+- `param-multi.xml`: mehrere Maschinenprofile, DXF-Layerregeln, variable Fase, Material-/Werkzeugzuordnungen
+- `asf.ini` und `asf_example.ini`: zusätzliche ASPER-Funktionsschalter, z.B. Additional Bevel und HP2CNC
+- `essi.ini`: ESSI-spezifische Konfiguration
+- `AsperVerInfo.txt`: Referenz-Build Revision 58431 / RevRange 58438 vom 12.09.2025
 
-CutAI v0.7.2 führt deshalb drei Ansichten:
-- Normal
-- Werkzeuge
-- Fasen
+## Statisch ausgewertete Kernmodule
 
-Die konkrete CutAI-Farbpalette ist eine eigene UI-Entscheidung und keine 1:1-Kopie der ASPER-Farben.
+CAD/CAM und Datenmodell:
+`Asper.exe`, `AnalyzerCNC.dll`, `DxfDrawDll.dll`, `CadcamMzm.dll`, `CadcamMZMWrap.dll`, `MZM.dll`, `MRP.dll`, `SqlCommon.dll`, `DataContexts.dll`, `DataContextsCadcam.dll`, `CadCamMaterialFilter.dll`, `Microstep.Tools.dll`.
 
-## Fasen
+Postprozessor-/Formatfamilien:
+`P_DIN1.dll`, `P_DIN1aw.dll`, `P_DXF.dll`, `P_ESSI.dll`, `P_awac.dll`, `P_Beckhoff.dll`, `P_Eckelmann.dll`, `P_EdgeG.dll`, `P_Flex.dll`, `P_Kinetic.dll`, `P_Rez1.dll`.
 
-Der Schulungsleitfaden unterscheidet:
-- V oben / positiv
-- V unten / negativ
-- Y oben
-- Y unten
-- X
-- K
+Nesting/Geometrie:
+`N32DLL.DLL`, `N32DLLA.DLL`, `N32DLLB.DLL`, `N32DLLC.DLL`, `N32DLLD.DLL`, `n64dll.dll`, `AutoNester-T_x64.dll`, `NestMTNG.exe`.
 
-Die Schulungsunterlagen zeigen außerdem eine K-Fase mit getrennten oberen und unteren Winkeln sowie Steghöhe. CutAI stellt Fasen deshalb als Profil mit mehreren aktiven Flächen dar und markiert sie zusätzlich direkt an der Geometrie.
+Simulation/NC-Hilfskomponenten:
+`NCSim.exe`, `CCnc1.Exe`, `Essi1.Exe`, `MsRez1.Exe`.
 
-## Simulation
+Weitere Bibliotheken wurden eingeordnet, aber nicht als CAD/CAM-Verhalten interpretiert, wenn sie erkennbar nur Laufzeit-, Bericht-, Lizenz-, Netzwerk- oder Grafik-Infrastruktur darstellen.
 
-Das NC-Simulator-Handbuch beschreibt unterschiedliche Darstellungen für Halbproduktkontur, Sollkontur, kompensierten Werkzeugpfad, Startpunkt und Verfahrwege. CutAI nutzt diese Information nur als UI-/Architektur-Referenz. Es simuliert weiterhin neutral und erzeugt kein freigegebenes Maschinenprogramm.
+## CutAI-Prinzip
 
-## Binär- und Konfigurationsquellen
+Interne Architektur:
 
-Weiterhin als Referenz ausgewertet wurden u. a.:
-`Asper.exe`, `AnalyzerCNC.dll`, `DxfDrawDll.dll`, `P_DIN1.dll`, `P_DIN1aw.dll`, `P_ESSI.dll`, `P_DXF.dll`, `NCSim.exe`, `N32DLL.DLL`, `n64dll.dll`, `param.xml`, `param-multi.xml`, `asf.ini`, `asf_example.ini`, `essi.ini`.
+`Geometrie -> Teil/Kette/Abschnitt -> Werkzeug/Technologie -> Fase/Anlauf/Mikrosteg -> Reihenfolge -> neutraler CAM-Plan -> separater Postprozessor`
 
-Alle Binärdateien wurden ausschließlich statisch betrachtet und nicht ausgeführt.
+Der Postprozessor bleibt absichtlich getrennt vom CAD/CAM-Datenmodell. Das verhindert, dass maschinenspezifische M-/G-Code-Annahmen in Geometrieobjekte eingebaut werden.
