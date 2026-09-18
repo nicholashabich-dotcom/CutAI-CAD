@@ -4,22 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111827">
-  <title>CutAI CAD/CAM v0.6</title>
-  <link rel="manifest" href="manifest-v06.webmanifest">
-  <link rel="stylesheet" href="styles-v06.css">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>CutAI CAD/CAM v0.7.1</title>
+  <link rel="manifest" href="manifest-v07.webmanifest">
+  <link rel="stylesheet" href="styles-v07.css?v=71">
 </head>
 <body>
   <header class="topbar">
-    <div><strong>CutAI CAD/CAM</strong> <span>v0.6</span></div>
-    <div id="status">Bereit · mm</div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.1 · ASPER-orientierter Kern</span></div>
+    <div class="top-actions"><button id="projectBtn">Projekt / Maschine</button><span id="status">Bereit · mm</span></div>
   </header>
 
   <main class="app">
-    <aside class="toolbar">
+    <aside class="toolbar" aria-label="CAD-Werkzeuge">
       <button class="tool active" data-tool="select">↖<small>Auswahl</small></button>
       <button class="tool" data-tool="line">╱<small>Linie</small></button>
       <button class="tool" data-tool="rect">▭<small>Rechteck</small></button>
       <button class="tool" data-tool="circle">○<small>Kreis</small></button>
+      <button class="tool" data-tool="arc">⌒<small>Bogen</small></button>
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
       <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
@@ -31,133 +34,62 @@
 
     <section class="workspace-wrap">
       <section class="workspace">
-        <svg id="cad" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet">
+        <svg id="cad" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid meet" aria-label="Zeichenfläche">
           <defs>
-            <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M10 0 L0 0 0 10" class="grid minor"/>
-            </pattern>
-            <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse">
-              <rect width="100" height="100" fill="url(#minorGrid)"/>
-              <path d="M100 0 L0 0 0 100" class="grid major"/>
-            </pattern>
+            <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0 L0 0 0 10" class="grid minor"/></pattern>
+            <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#minorGrid)"/><path d="M100 0 L0 0 0 100" class="grid major"/></pattern>
           </defs>
-          <rect id="gridBg" x="-5000" y="-5000" width="10000" height="10000" fill="url(#majorGrid)"/>
-          <g id="geometry"></g>
-          <g id="dimensions"></g>
-          <g id="camMarkers"></g>
-          <g id="preview"></g>
-          <g id="snapLayer"></g>
+          <rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
+          <g id="geometry"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
         </svg>
-
         <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
         <section class="properties hidden" id="properties">
-          <div class="properties-head">
-            <strong id="propTitle">Eigenschaften</strong>
-            <button id="closeProperties">×</button>
-          </div>
-
-          <div id="propertyFields" class="property-fields"></div>
+          <div class="properties-head"><strong id="propTitle">Kontur</strong><button id="closeProperties">×</button></div>
+          <div id="geometryFields" class="property-fields"></div>
 
           <div class="move-box">
             <strong>Auswahl verschieben</strong>
-            <div class="property-fields">
-              <div class="field">
-                <label>ΔX (mm)</label>
-                <input id="moveX" type="number" step="0.1" value="0">
-              </div>
-              <div class="field">
-                <label>ΔY (mm)</label>
-                <input id="moveY" type="number" step="0.1" value="0">
-              </div>
-            </div>
-            <div class="move-actions">
-              <button data-nudge="-1,0">← 1</button>
-              <button data-nudge="1,0">1 →</button>
-              <button data-nudge="0,-1">↑ 1</button>
-              <button data-nudge="0,1">1 ↓</button>
-              <button id="moveApply">Versatz anwenden</button>
-            </div>
+            <div class="property-fields"><div class="field"><label>ΔX (mm)</label><input id="moveX" type="number" step="0.1" value="0"></div><div class="field"><label>ΔY (mm)</label><input id="moveY" type="number" step="0.1" value="0"></div></div>
+            <div class="move-actions"><button data-nudge="-1,0">← 1</button><button data-nudge="1,0">1 →</button><button data-nudge="0,-1">↑ 1</button><button data-nudge="0,1">1 ↓</button><button id="moveApply">Versatz anwenden</button></div>
           </div>
 
-          <div id="camFields" class="cam-fields">
-            <div class="field">
-              <label>Technologie</label>
-              <select id="technology">
-                <option>Plasma</option>
-                <option>Laser</option>
-                <option>Autogen</option>
-                <option>Markieren</option>
-                <option>Bohren</option>
-                <option>Keine</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Konturtyp</label>
-              <select id="contourType">
-                <option value="auto">Auto</option>
-                <option value="outside">Außen</option>
-                <option value="inside">Innen</option>
-                <option value="mark">Markieren</option>
-                <option value="drill">Bohren</option>
-                <option value="none">Keine</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Schneidrichtung</label>
-              <select id="direction">
-                <option value="cw">Im Uhrzeigersinn</option>
-                <option value="ccw">Gegen Uhrzeigersinn</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>Schnittreihenfolge</label>
-              <input id="cutOrder" type="number" min="1" step="1">
-            </div>
-            <div class="field">
-              <label>Lead-In (mm)</label>
-              <input id="leadIn" type="number" step="0.1">
-            </div>
-            <div class="field">
-              <label>Lead-Out (mm)</label>
-              <input id="leadOut" type="number" step="0.1">
+          <div class="cam-box">
+            <strong>CAM</strong>
+            <div class="property-fields">
+              <div class="field wide"><label>Werkzeug</label><select id="toolCode"></select></div>
+              <div class="field"><label>Konturtyp</label><select id="contourType"><option value="auto">Auto</option><option value="outside">Außen</option><option value="inside">Innen</option><option value="mark">Markieren</option><option value="drill">Bohren</option><option value="none">Keine Bearbeitung</option></select></div>
+              <div class="field"><label>Richtung</label><select id="direction"><option value="cw">Im Uhrzeigersinn</option><option value="ccw">Gegen Uhrzeigersinn</option></select></div>
+              <div class="field"><label>Reihenfolge</label><input id="cutOrder" type="number" min="1" step="1"></div><div class="field"><label>Schnittfuge (mm)</label><input id="kerfMm" type="number" min="0" step="0.01" value="0"></div>
+              <div class="field"><label>Kompensation</label><select id="kerfComp"><option value="auto">Auto</option><option value="none">Keine</option><option value="left">Links</option><option value="right">Rechts</option></select></div>
+              <div class="field"><label>Lead-In Typ</label><select id="leadInType"><option value="none">Kein</option><option value="line">Gerade</option><option value="arc">Bogen</option></select></div>
+              <div class="field"><label>Lead-In Länge (mm)</label><input id="leadInLen" type="number" min="0" step="0.1"></div>
+              <div class="field"><label>Lead-Out Typ</label><select id="leadOutType"><option value="none">Kein</option><option value="line">Gerade</option><option value="arc">Bogen</option></select></div>
+              <div class="field"><label>Lead-Out Länge (mm)</label><input id="leadOutLen" type="number" min="0" step="0.1"></div>
             </div>
           </div>
 
           <div class="bevel-box">
-            <div class="bevel-title">
-              <strong>Fasenaggregat</strong>
-              <label class="switch-row"><input id="bevelEnabled" type="checkbox"> aktiv</label>
-            </div>
+            <div class="bevel-title"><strong>Fasenprofil</strong><label class="switch-row"><input id="bevelEnabled" type="checkbox"> aktiv</label></div>
             <div class="property-fields">
-              <div class="field"><label>Fasenwinkel (0–50°)</label><input id="bevelAngle" type="number" min="0" max="50" step="0.1" value="0"></div>
-              <div class="field"><label>Fasenseite</label><select id="bevelSide"><option value="left">Links</option><option value="right">Rechts</option></select></div>
-              <div class="field"><label>Fasenart</label><select id="bevelType"><option value="V">V-Fase</option><option value="Y">Y-Fase</option><option value="K">K/X-Fase</option><option value="custom">Benutzerdefiniert</option></select></div>
-              <div class="field"><label>Steghöhe (mm)</label><input id="bevelLand" type="number" min="0" step="0.1" value="0"></div>
+              <div class="field"><label>Profil</label><select id="bevelType"><option value="V">V-Fase</option><option value="Y">Y-Fase</option><option value="K">K/X-Fase</option><option value="custom">Benutzerdefiniert</option></select></div>
+              <div class="field"><label>Bearbeitung</label><select id="bevelLocation"><option value="top">Oben</option><option value="bottom">Unten</option><option value="both">Oben + unten</option></select></div>
+              <div class="field"><label>Steg (mm)</label><input id="bevelLand" type="number" min="0" step="0.1"></div>
+              <div class="field"><label>Azimut (°)</label><input id="bevelAzimuth" type="number" step="0.1" value="0"></div>
+              <div class="field wide"><label><input id="bevelVariable" type="checkbox"> Variable Fase</label></div>
             </div>
-            <div class="bevel-actions">
-              <button id="bevelZeroBtn">Fase aus / 0°</button>
-              <button id="bevel45Btn">45° setzen</button>
-              <button id="bevel50Btn">50° setzen</button>
-            </div>
+            <div class="face-grid" id="faceGrid"></div>
+            <div class="bevel-actions"><button id="presetVBtn">V 30°</button><button id="presetYBtn">Y 30°</button><button id="presetKBtn">K 30°</button><button id="bevelZeroBtn">Fase aus</button></div>
           </div>
 
-          <div id="edgeInfo" class="edge-info hidden"></div>
-
-          <div class="prop-actions">
-            <button id="setStartBtn">Startpunkt setzen</button>
-            <button id="clearStartBtn">Startpunkt löschen</button>
-            <button id="applyCamToSelection">CAM/Fase auf Auswahl übernehmen</button>
-            <button id="applyProperties" class="apply-btn">Geometrie übernehmen</button>
-          </div>
+          <div class="edge-info" id="edgeInfo"></div>
+          <div class="prop-actions"><button id="setStartBtn">Startpunkt setzen</button><button id="clearStartBtn">Startpunkt löschen</button><button id="applyCamToSelection">CAM/Fase auf Auswahl übernehmen</button><button id="applyProperties" class="apply-btn">Eigenschaften übernehmen</button></div>
         </section>
       </section>
 
       <aside class="contour-panel">
-        <div class="contour-head">
-          <strong>Konturen</strong>
-          <div><button id="selectAllBtn">Alle</button> <button id="clearSelectionBtn">Keine</button></div>
-        </div>
+        <div class="contour-head"><strong>Konturen</strong><div><button id="selectAllBtn">Alle</button><button id="clearSelectionBtn">Keine</button></div></div>
+        <div class="project-summary" id="projectSummary"></div>
         <div id="contourList" class="contour-list"></div>
       </aside>
     </section>
@@ -170,20 +102,44 @@
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
       <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,text/plain"></label>
       <label class="file-btn">SVG importieren<input id="svgInput" type="file" accept=".svg,image/svg+xml"></label>
-      <button id="dxfBtn">DXF exportieren</button>
-      <button id="camPlanBtn">CAM-Plan exportieren</button>
+      <button id="joinBtn">Konturen erkennen</button>
       <button id="autoCamBtn">CAM automatisch</button>
+      <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="referenceBtn">ASPER Referenz</button>
+      <button id="dxfBtn">DXF R12 exportieren</button>
+      <button id="camPlanBtn">CAM-Plan exportieren</button>
       <button id="fitBtn">Alles anzeigen</button>
       <button id="resetViewBtn">Ansicht 1:1</button>
     </div>
   </section>
 
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
-    }
-    if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
-  </script>
-  <script src="app-v06.js"></script>
+  <dialog id="projectDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head"><strong>Projekt / Maschinenprofil</strong><button value="cancel">×</button></div>
+      <div class="property-fields">
+        <div class="field wide"><label>Projektname</label><input id="projectName"></div>
+        <div class="field wide"><label>Maschinenprofil</label><select id="machineProfileSelect"></select></div>
+        <div class="field wide"><label>Profilname / Anzeige</label><input id="machineName"></div>
+        <div class="field"><label>Material</label><input id="materialName"></div>
+        <div class="field"><label>Dicke (mm)</label><input id="materialThickness" type="number" min="0" step="0.1"></div>
+        <div class="field"><label>Fasenlimit (°)</label><input id="bevelLimit" type="number" min="0" max="50" step="0.1"></div>
+        <div class="field"><label>Additional Bevel</label><select id="additionalBevel"><option value="0">Aus</option><option value="1">1 · oben/unten getrennte CNC</option><option value="2">2 · gemeinsam, falls Steuerung unterstützt</option></select></div>
+        <div class="field"><label>Plattenkontur im CNC (HP2CNC)</label><select id="sheetShapeInCnc"><option value="0">0 · nicht</option><option value="1">1 · nur nicht rechteckig</option><option value="2">2 · immer</option></select></div>
+        <div class="field"><label>Postprozessor-Ziel</label><select id="postprocessorTarget"></select></div>
+        <div class="field wide"><label>DXF-Layerregelgruppe</label><select id="dxfLayerGroup"><option value="">Keine / automatisch</option></select></div>
+        <div class="field wide"><label>ASPER-Konfiguration lokal einlesen</label><label class="file-btn inline-file">param.xml / param-multi.xml / asf.ini / essi.ini<input id="asperConfigInput" type="file" accept=".xml,.ini,.txt,text/xml,text/plain"></label></div>
+        <div class="field wide"><div id="machineProfileInfo" class="config-info"></div></div>
+      </div>
+      <p class="hint">Das Profil speichert ASPER-Werkzeug- und Layer-Metadaten neutral. Auch bei ausgewähltem Postprozessor-Ziel wird in dieser Version kein ausführbares Maschinen-NC erzeugt.</p>
+      <div class="dialog-actions"><button id="saveProjectSettings" value="default">Übernehmen</button><button value="cancel">Abbrechen</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
+  <dialog id="referenceDialog"><div class="dialog-card"><div class="dialog-head"><strong>ASPER Referenzstand</strong><button id="closeReference">×</button></div><div id="referenceBody" class="report-body"></div></div></dialog>
+
+  <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
+  <script src="asper-reference-v071.js?v=71"></script>
+  <script src="cutai-core-v07.js?v=71"></script>
+  <script src="app-v071.js?v=71"></script>
 </body>
 </html>
