@@ -1,75 +1,46 @@
-# CutAI CAD/CAM Windows v0.8.1
+# CutAI CAD/CAM v0.7.2
 
-Windows-11-Desktoppaket auf Basis von CutAI CAD/CAM v0.7.2 und dem bisher ausgewerteten ASPER/MicroStep-Referenzmaterial.
+Diese Version baut auf v0.7.1 auf und gleicht drei zentrale Punkte stärker an den dokumentierten ASPER-Workflow an: Abschnitte, Werkzeugfarben und sichtbare Fasen.
 
-## Installation auf Windows 11
+## Neu in v0.7.2
 
-1. ZIP vollständig entpacken.
-2. `Install-CutAI.cmd` doppelklicken.
-3. Windows PowerShell kopiert CutAI nach `%LOCALAPPDATA%\CutAI CAD`.
-4. Auf Desktop und im Startmenü wird `CutAI CAD` angelegt.
-5. CutAI startet in einem eigenen App-Fenster über Microsoft Edge oder, falls vorhanden, Google Chrome.
+- Werkzeugansicht als Standard: verschiedene Werkzeuge erhalten unterschiedliche Farben.
+- Zusätzliche Ansichtsmodi: Normal, Werkzeuge und Fasen.
+- Werkzeuglegende mit Code, Name und Farbe.
+- Sichtbare Fasenmarkierung direkt an der Geometrie:
+  - farbige Hervorhebung,
+  - Trennmarken an Anfang/Ende,
+  - Beschriftung wie `V↑ 30°`, `Y↑ 30° · Steg 5`, `K↕ 30°/30°`.
+- Werkzeug- und Fasenfarbe bleibt auch nach DXF-Import sichtbar.
+- Neuer Modus **Abschnitt trennen**:
+  - bei einer geschlossenen Kontur setzt der erste Klick den ersten Abschnittspunkt,
+  - der zweite Klick erzeugt getrennte Abschnitte,
+  - weitere Teilungen sind möglich,
+  - jeder Abschnitt kann ein eigenes Werkzeug, eigene Fase und eigene CAM-Parameter erhalten.
+- Abschnittsgrenzen werden in der Zeichnung markiert.
+- Abschnitte einer geschlossenen Kette werden gemeinsam als Kette geführt.
+- **Abschnitte verbinden** verbindet ausgewählte, zusammenhängende Abschnitte wieder, wenn ihre CAM-/Fasenparameter identisch sind.
+- CAM-Plan v0.7.2 enthält `chainId`, `chainName`, `sectionIndex` und `chainClosed`.
+- Projektformat wurde auf `cutai-cad/0.7.2` erweitert; v0.7/v0.7.1 und v0.6 werden weiterhin geladen.
+- Tastenkürzel `X` wechselt die Ansichtsmodi; `L` aktiviert Abschnitt trennen.
 
-Für die Installation sind keine Administratorrechte vorgesehen.
+## ASPER-Abgleich
 
-## Neu in v0.8.1
+Der Schulungsleitfaden beschreibt ausdrücklich, dass Fasen nicht auf einzelne Kanten, sondern auf komplette Abschnitte angewendet werden. Deshalb müssen die benötigten Kanten vorher mit **Abschnitt -> Auftrennen** freigestellt werden. Außerdem empfiehlt die Schulung den Ansichtsmodus **Werkzeug**, um verschiedene Werkzeuge in unterschiedlichen Farben zu erkennen.
 
-- DXF-Import grundlegend ueberarbeitet
-- erkennt ASCII/ANSI/UTF-8/UTF-16 DXF
-- unterstuetzt LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE, ELLIPSE und SPLINE
-- BLOCK/INSERT-Geometrie wird expandiert
-- LWPOLYLINE/POLYLINE-Bulges werden als echte Bogenabschnitte uebernommen
-- DXF-Boegen werden mit korrekter Richtung importiert/exportiert
-- kleine Konturluecken bis 0,5 mm werden automatisch geschlossen
-- offene Ketten werden nicht als Schneidkontur importiert und im Status gemeldet
-- bei binaerem DXF erscheint eine klare Meldung statt eines stillen Fehlers
+Die v0.7.2-Darstellung folgt diesem Grundprinzip, ohne proprietäre ASPER-Grafiken oder Maschinenlogik zu kopieren.
 
-## Bereits aus v0.8 enthalten
+## DXF-Testdateien
 
-- sichtbare Fangpunkte an Endpunkten, Mittelpunkten, Kreismittelpunkten und Quadranten
-- Fangpunkte unter `Punkte > Fangpunkte anzeigen` oder `Shift+P` ein-/ausblendbar
-- der Fang verwendet diese Punkte auch beim Zeichnen
-- aufgetrennte Konturen werden als echte Einzelabschnitte angelegt
-- nach `Kontur auftrennen` wird automatisch Einzelauswahl aktiviert
-- jeder Abschnitt kann separat angeklickt, verschoben und mit eigenem Werkzeug/Fasenprofil versehen werden
-- Werkzeugfarben und Fasenanzeige aus v0.7.2 bleiben erhalten
-- obere ASPER-orientierte Funktionsleiste und Schnellbefehle bleiben erhalten
-- lokaler Windows-Betrieb ohne GitHub erforderlich
+Die bereitgestellten Dateien wurden mit dem aktuellen DXF-Kern geprüft:
 
-## Wichtige Grenze
+- `2Q001692.DXF`: 1 geschlossene Kontur aus 8 Linien/Bögen erkannt.
+- `3Q100711.DXF`: 6 geschlossene Konturen erkannt.
+- `KELEM-A.DXF`: 2 geschlossene Konturen erkannt.
+- `KELEM-E.DXF`: 2 geschlossene Konturen erkannt.
 
-CutAI v0.8 erzeugt weiterhin **kein produktionsfreigegebenes Maschinen-NC**. Die aus ASPER/MicroStep-Dateien gewonnenen Informationen werden zur Datenmodellierung und Vorbereitung des Postprozessors verwendet. Vor einer Maschinenanbindung müssen NC-Ausgabe, Werkzeugparameter, Fasenlogik und Maschinenkonfiguration gegen dokumentierte Daten sowie bekannte Gutprogramme validiert werden.
+POINT-Objekte werden wie im ASPER-Handbuch nicht als Schneidgeometrie interpretiert.
 
-## Deinstallation
+## Sicherheit
 
-Im Startmenü `CutAI CAD deinstallieren` wählen oder `Uninstall-CutAI.cmd` aus dem Installationsordner ausführen.
-
-## Tastenkürzel
-
-- `V` Auswahl
-- `L` Linie
-- `Q` Rechteck
-- `C` Kreis
-- `A` Bogen
-- `P` Pan
-- `G` Fang Ein/Aus
-- `Shift+P` Fangpunkte anzeigen/ausblenden
-- `X` Kontur auftrennen
-- `J` Abschnitte verbinden
-- `R` Richtung umkehren
-- `S` Startpunkt setzen
-- `Shift+S` Startpunkt löschen
-- `M` Mehrfachauswahl
-- Pfeiltasten Auswahl um 1 mm bewegen
-- `[` / `]` Schneidfolge vor/zurück
-- `Ctrl+Z` / `Ctrl+Y` Rückgängig / Wiederholen
-- `Ctrl+S` Projekt speichern
-- `Ctrl+O` Projekt laden
-- `Ctrl+I` DXF importieren
-- `F1` Anleitung öffnen
-
-
-
-## DXF-Hinweis
-
-CutAI v0.8.1 verarbeitet textbasierte DXF-Dateien direkt. Wenn im Status `Binaeres DXF erkannt` erscheint, muss die Datei derzeit als ASCII-DXF (z. B. R12 oder R2000 ASCII) gespeichert werden. Nicht geschlossene Ketten werden bewusst nicht als Schneidkonturen uebernommen.
+CutAI erzeugt weiterhin **kein ausführbares Maschinen-NC**. Postprozessoren und M-Codes bleiben Referenzwissen, bis Maschinenkonfiguration und Gutprogramme sicher validiert sind.

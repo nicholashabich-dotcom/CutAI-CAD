@@ -6,17 +6,15 @@
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CutAI CAD/CAM v0.8.1</title>
-  <link rel="manifest" href="manifest-v081.webmanifest">
-  <link rel="stylesheet" href="styles-v081.css?v=80">
+  <title>CutAI CAD/CAM v0.7.2</title>
+  <link rel="manifest" href="manifest-v072.webmanifest">
+  <link rel="stylesheet" href="styles-v072.css?v=72">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.8.1 · Windows Desktop · ASPER-orientierter Kern</span></div>
-    <div class="top-actions"><button id="projectBtn">Projekt / Maschine</button><span id="status">Bereit · mm</span></div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.2 · Abschnitte, Werkzeugfarben & Fasenansicht</span></div>
+    <div class="top-actions"><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option></select></label><button id="projectBtn">Projekt / Maschine</button><span id="status">Bereit · mm</span></div>
   </header>
-  <nav class="menubar" id="menubar" aria-label="Hauptfunktionen"></nav>
-  <div class="menu-popover hidden" id="menuPopover"></div>
 
   <main class="app">
     <aside class="toolbar" aria-label="CAD-Werkzeuge">
@@ -26,9 +24,9 @@
       <button class="tool" data-tool="circle">○<small>Kreis</small></button>
       <button class="tool" data-tool="arc">⌒<small>Bogen</small></button>
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
+      <button class="tool" data-tool="split">✂<small>Abschnitt trennen</small></button>
       <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
-      <button id="snapPointsBtn" class="active">⊙<small>Fangpunkte</small></button>
       <button id="duplicateBtn">⧉<small>Kopieren</small></button>
       <button id="undoBtn">↶<small>Zurück</small></button>
       <button id="redoBtn">↷<small>Vor</small></button>
@@ -42,8 +40,8 @@
             <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0 L0 0 0 10" class="grid minor"/></pattern>
             <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#minorGrid)"/><path d="M100 0 L0 0 0 100" class="grid major"/></pattern>
           </defs>
-          <rect id="gridRect" x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
-          <g id="sheetLayer"></g><g id="geometry"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"><g id="snapPointsLayer"></g><g id="snapCursorLayer"></g></g>
+          <rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
+          <g id="geometry"></g><g id="bevelLayer"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
         </svg>
         <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
@@ -91,7 +89,7 @@
       </section>
 
       <aside class="contour-panel">
-        <div class="contour-head"><strong>Konturen</strong><div><button id="selectAllBtn">Alle</button><button id="clearSelectionBtn">Keine</button></div></div>
+        <div class="contour-head"><strong>Konturen / Abschnitte</strong><div><button id="selectAllBtn">Alle</button><button id="clearSelectionBtn">Keine</button></div></div>
         <div class="project-summary" id="projectSummary"></div>
         <div class="tool-legend" id="toolLegend"></div>
         <div id="contourList" class="contour-list"></div>
@@ -104,11 +102,12 @@
       <button id="newBtn">Neu</button>
       <button id="saveBtn">Projekt speichern</button>
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
-      <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,application/dxf,application/x-dxf,image/vnd.dxf,text/plain"></label>
+      <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,text/plain"></label>
       <label class="file-btn">SVG importieren<input id="svgInput" type="file" accept=".svg,image/svg+xml"></label>
-      <button id="joinBtn">Konturen erkennen</button><button id="splitBtn">Kontur auftrennen</button>
+      <button id="joinBtn">Konturen erkennen</button>
+      <button id="mergeSectionsBtn">Abschnitte verbinden</button>
       <button id="autoCamBtn">CAM automatisch</button>
-      <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="referenceBtn">ASPER Referenz</button><button id="manualBtn">Anleitung PDF</button>
+      <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="referenceBtn">ASPER Referenz</button>
       <button id="dxfBtn">DXF R12 exportieren</button>
       <button id="camPlanBtn">CAM-Plan exportieren</button>
       <button id="fitBtn">Alles anzeigen</button>
@@ -140,11 +139,10 @@
 
   <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
   <dialog id="referenceDialog"><div class="dialog-card"><div class="dialog-head"><strong>ASPER Referenzstand</strong><button id="closeReference">×</button></div><div id="referenceBody" class="report-body"></div></div></dialog>
-  <dialog id="shortcutDialog"><div class="dialog-card"><div class="dialog-head"><strong>Tastenkürzel / Schnellfunktionen</strong><button id="closeShortcuts">×</button></div><div id="shortcutBody" class="report-body"></div></div></dialog>
 
   <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
-  <script src="asper-reference-v071.js?v=72"></script>
-  <script src="cutai-core-v081.js?v=81"></script>
-  <script src="app-v081.js?v=81"></script>
+  <script src="asper-reference-v072.js?v=72"></script>
+  <script src="cutai-core-v072.js?v=72"></script>
+  <script src="app-v072.js?v=72"></script>
 </body>
 </html>

@@ -1,41 +1,49 @@
 # ASPER / MicroStep Referenz für CutAI v0.7.2
 
-## Ausgewertete Bereiche
+## Dokumentierter Workflow
 
-Die bereitgestellten Dateien wurden nur statisch analysiert. Für CutAI wurden daraus Architektur und Datenmodell abgeleitet, nicht proprietärer Programmcode übernommen.
+Die bereitgestellten ASPER-Unterlagen bestätigen die interne Modellierung, die CutAI jetzt verwendet:
 
-### CAD / Konturen / DXF
+- **Entity**: Linie, Polylinie, Kreis oder Bogen.
+- **Section / Abschnitt**: zusammenhängende Entities mit gemeinsamen technologischen Eigenschaften.
+- **Chain / Kette**: Gruppe angrenzender Abschnitte; ein Teil besitzt eine Außenkette und ggf. Innenketten.
+- Fasen werden auf einen **kompletten Abschnitt** angewendet.
+- Für unterschiedliche Bearbeitungen an einzelnen Kanten muss eine Kette deshalb vorher in mehrere Abschnitte aufgetrennt werden.
 
-`Asper.exe`, `DxfDrawDll.dll`, `P_DXF.dll`, `WSelect.exe` und die Parameterdateien zeigen ein konturbasiertes Modell mit DXF-Layern, Teilen, Konturen, Werkzeugzuordnung und Exportmodulen. Daraus stammt in CutAI die Trennung `Teil/Kontur -> Geometrie -> CAM-Attribute` sowie die layerweise Konturerkennung.
+Der Schulungsleitfaden Asper Bevel 5.0 beschreibt auf Seite 73 ausdrücklich das Auftrennen der Außenkontur mit Fangpunkt und Befehl **Abschnitt auftrennen**. Seite 75 zeigt anschließend, dass die Fasenparameter auf den gewünschten Abschnitt angewendet werden.
 
-### Werkzeuge / Technologie
+## Werkzeugfarben
 
-`param.xml`, `param-multi.xml`, `AnalyzerCNC.dll`, `SqlCommon.dll`, `DataContexts.dll` und `CadCamMaterialFilter.dll` zeigen getrennte Werkzeug-, Material-, Dicken- und Technologieinformationen. Das integrierte Referenzprofil wird aus der bereitgestellten `param.xml` erzeugt. Weitere ASPER-Parameterdateien können lokal im Browser importiert werden.
+Der Schulungsleitfaden Asper 5.0, Seite 36, empfiehlt den Ansichtsmodus **Werkzeug**, um unterschiedliche Werkzeuge in unterschiedlichen Farben zu sehen.
 
-### Fasen
+Das ASPER 5.0 User Manual beschreibt auf den Seiten 103-105 mehrere farbcodierte Ansichtsmodi. Im Werkzeugmodus werden gerade Schnitte und Fasenschnitte farblich unterschieden.
 
-`param.xml` und `param-multi.xml` enthalten u. a. RotType, BevelCorrectionType, CanVarBev, Winkel und Layerzuordnungen. `P_DIN1.dll`/`P_DIN1aw.dll` zeigen zusätzliche mehrstufige Fasenstrukturen. CutAI modelliert deshalb bis zu vier Fasenflächen, Variable-Bevel-Metadaten, Azimut und Additional-Bevel-Modi, erzeugt daraus aber noch kein Maschinen-NC.
+CutAI v0.7.2 führt deshalb drei Ansichten:
+- Normal
+- Werkzeuge
+- Fasen
 
-### Postprozessoren
+Die konkrete CutAI-Farbpalette ist eine eigene UI-Entscheidung und keine 1:1-Kopie der ASPER-Farben.
 
-Die bereitgestellten Module `P_DIN1`, `P_ESSI`, `P_DXF`, `P_Beckhoff`, `P_Eckelmann`, `P_EdgeG`, `P_Flex`, `P_Kinetic`, `P_Rez1` und `P_awac` exportieren dieselbe ASPER-Plugin-Grundschnittstelle. CutAI bildet dieses Prinzip mit einem neutralen CAM-Plan plus auswählbarem späterem Postprozessor-Ziel nach.
+## Fasen
 
-### Simulation
+Der Schulungsleitfaden unterscheidet:
+- V oben / positiv
+- V unten / negativ
+- Y oben
+- Y unten
+- X
+- K
 
-`NCSim.exe` bestätigt eine getrennte NC-Simulation mit Werkzeug-, Fasen- und Mehrkopfbezug. V0.7.2 enthält deshalb zunächst eine sichere geometrische CAM-Simulation für Reihenfolge, Schnittweg und Eilweg.
+Die Schulungsunterlagen zeigen außerdem eine K-Fase mit getrennten oberen und unteren Winkeln sowie Steghöhe. CutAI stellt Fasen deshalb als Profil mit mehreren aktiven Flächen dar und markiert sie zusätzlich direkt an der Geometrie.
 
-### Nesting
+## Simulation
 
-`N32DLL*`, `n64dll.dll`, `AutoNester-T_x64.dll` und `NestMTNG.exe` zeigen, dass Schachtelung ein eigener Baustein ist. Nesting bleibt bewusst als eigener Baustein getrennt. v0.7.2 enthält nur eine einfache Reihen-Schachtelung als Bedien- und Datenmodell-Prototyp, nicht den ASPER-/AutoNester-Algorithmus.
+Das NC-Simulator-Handbuch beschreibt unterschiedliche Darstellungen für Halbproduktkontur, Sollkontur, kompensierten Werkzeugpfad, Startpunkt und Verfahrwege. CutAI nutzt diese Information nur als UI-/Architektur-Referenz. Es simuliert weiterhin neutral und erzeugt kein freigegebenes Maschinenprogramm.
 
-### Produktions-/Datenbankebene
+## Binär- und Konfigurationsquellen
 
-`CadcamMzm.dll`, `CadcamMZMWrap.dll`, `MZM.dll`, `MRP.dll`, `DataContextsCadcam.dll` und `ConnectionStringManager.dll` betreffen u. a. Projekte, Material, Lager/Restplatten und Produktionsdaten. Diese Ebene wird in v0.7.2 noch nicht angebunden.
+Weiterhin als Referenz ausgewertet wurden u. a.:
+`Asper.exe`, `AnalyzerCNC.dll`, `DxfDrawDll.dll`, `P_DIN1.dll`, `P_DIN1aw.dll`, `P_ESSI.dll`, `P_DXF.dll`, `NCSim.exe`, `N32DLL.DLL`, `n64dll.dll`, `param.xml`, `param-multi.xml`, `asf.ini`, `asf_example.ini`, `essi.ini`.
 
-### Infrastruktur
-
-OpenSSL-, GLUT-, Crystal-Reports-, ACL-, Sprach- und sonstige Laufzeitbibliotheken wurden zur Einordnung geprüft, beeinflussen den CAD/CAM-Kern aber nicht direkt.
-
-## Sicherheitsgrenze
-
-Die aktuelle Software ist ein CAD/CAM-Prototyp und kein freigegebener Maschinen-Postprozessor. Maschinenbefehle werden erst dann erzeugt, wenn konkrete Maschinenparameter, Steuerungsvariante und Referenzprogramme sicher abgeglichen werden können.
+Alle Binärdateien wurden ausschließlich statisch betrachtet und nicht ausgeführt.
