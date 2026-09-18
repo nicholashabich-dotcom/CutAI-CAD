@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CutAI CAD/CAM v0.8.0</title>
-  <link rel="manifest" href="manifest-v080.webmanifest">
-  <link rel="stylesheet" href="styles-v080.css?v=80">
+  <title>CutAI CAD/CAM v0.7.5</title>
+  <link rel="manifest" href="manifest-v075.webmanifest">
+  <link rel="stylesheet" href="styles-v075.css?v=75">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.8.0 · Abschnittstechnik, Mikrostege, ATHC & Simulation</span></div>
-    <div class="top-actions"><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option><option value="speed">Geschwindigkeit</option><option value="athc">ATHC</option><option value="head">Kopf</option><option value="gantry">Portal</option><option value="power">Leistung</option><option value="order">Schneidfolge</option></select></label><button id="projectBtn">Projekt / Maschine</button><span id="status">Bereit · mm</span></div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.5 · Anlagenaufbau, Technologien & Fasen</span></div>
+    <div class="top-actions"><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option><option value="order">Schneidfolge</option></select></label><button id="projectBtn">Projekt / Anlage</button><span id="status">Bereit · mm</span></div>
   </header>
 
   <main class="app">
@@ -25,7 +25,6 @@
       <button class="tool" data-tool="arc">⌒<small>Bogen</small></button>
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
       <button class="tool" data-tool="split">✂<small>Abschnitt trennen</small></button>
-      <button class="tool" data-tool="microjoint">╫<small>Mikrosteg setzen</small></button>
       <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
       <button id="duplicateBtn">⧉<small>Kopieren</small></button>
@@ -42,7 +41,7 @@
             <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#minorGrid)"/><path d="M100 0 L0 0 0 100" class="grid major"/></pattern>
           </defs>
           <rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
-          <g id="sheetLayer"></g><g id="geometry"></g><g id="bevelLayer"></g><g id="leadLayer"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
+          <g id="geometry"></g><g id="bevelLayer"></g><g id="leadLayer"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
         </svg>
         <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
@@ -59,6 +58,7 @@
           <div class="cam-box">
             <strong>CAM</strong>
             <div class="property-fields">
+              <div class="field wide"><label>Bearbeitungsstation</label><select id="stationId"></select></div>
               <div class="field wide"><label>Werkzeug</label><select id="toolCode"></select></div>
               <div class="field"><label>Konturtyp</label><select id="contourType"><option value="auto">Auto</option><option value="outside">Außen</option><option value="inside">Innen</option><option value="mark">Markieren</option><option value="drill">Bohren</option><option value="none">Keine Bearbeitung</option></select></div>
               <div class="field"><label>Konturrichtung</label><select id="direction"><option value="cw">Im Uhrzeigersinn</option><option value="ccw">Gegen Uhrzeigersinn</option></select></div>
@@ -69,45 +69,10 @@
               <div class="field"><label>Lead-In Länge (mm)</label><input id="leadInLen" type="number" min="0" step="0.1"></div>
               <div class="field"><label>Lead-In Winkel (°)</label><input id="leadInAngle" type="number" step="0.1" value="0"></div>
               <div class="field"><label>Lead-In Radius (mm)</label><input id="leadInRadius" type="number" min="0" step="0.1" value="0"></div>
-              <div class="field"><label>Senkrechter Fasen-Anlauf (mm)</label><input id="leadInVertical" type="number" min="0" step="0.1" value="0"></div>
               <div class="field"><label>Lead-Out Typ</label><select id="leadOutType"><option value="none">Kein</option><option value="line">Gerade</option><option value="arc">Bogen</option></select></div>
               <div class="field"><label>Lead-Out Länge (mm)</label><input id="leadOutLen" type="number" min="0" step="0.1"></div>
               <div class="field"><label>Lead-Out Winkel (°)</label><input id="leadOutAngle" type="number" step="0.1" value="0"></div>
               <div class="field"><label>Lead-Out Radius (mm)</label><input id="leadOutRadius" type="number" min="0" step="0.1" value="0"></div>
-            </div>
-          </div>
-
-          <div class="section-tech-box">
-            <div class="section-tech-title"><strong>Abschnitt / Technologie</strong><span class="hint">Eigene CutAI-Oberfläche, technisch am dokumentierten ASPER-Abschnittsmodell orientiert.</span></div>
-            <div class="property-fields">
-              <div class="field"><label><input id="cutEnabled" type="checkbox" checked> Schneiden/Bearbeitung aktiv</label></div>
-              <div class="field"><label>Priorität (-1 = Werkzeug)</label><input id="sectionPriority" type="number" step="1" value="-1"></div>
-              <div class="field"><label>Relative Geschwindigkeit (%)</label><input id="relativeSpeed" type="number" min="1" max="1000" step="1" value="100"></div>
-              <div class="field"><label>Eigene Geschwindigkeit (mm/min)</label><input id="customSpeed" type="number" min="0" step="1" value="0"></div>
-              <div class="field"><label>Leistung (%)</label><input id="powerPct" type="number" min="0" max="100" step="1" value="100"></div>
-              <div class="field"><label>ATHC / Höhenregelung</label><select id="athcMode"><option value="standard">Standard</option><option value="detected">Erkannte Oberfläche</option><option value="voltage-learning">Spannung lernen</option><option value="learned-voltage">Gelernte Spannung</option><option value="off">Aus</option></select></div>
-              <div class="field"><label>Kopfindex</label><input id="headIndex" type="number" min="1" step="1" value="1"></div>
-              <div class="field"><label>Portalindex</label><input id="gantryIndex" type="number" min="1" step="1" value="1"></div>
-              <div class="field"><label>IHS-Versatz X (mm)</label><input id="ihsOffsetX" type="number" step="0.1" value="0"></div>
-              <div class="field"><label>IHS-Versatz Y (mm)</label><input id="ihsOffsetY" type="number" step="0.1" value="0"></div>
-              <div class="field"><label><input id="prePiercing" type="checkbox"> Vorstechen</label></div>
-              <div class="field"><label><input id="coolingBefore" type="checkbox"> Kühlen vor Abschnitt</label></div>
-              <div class="field"><label><input id="lockToolHeight" type="checkbox"> Werkzeughöhe sperren</label></div>
-              <div class="field"><label><input id="chainCut" type="checkbox"> Kettenschnitt / Werkzeug an</label></div>
-              <div class="field"><label><input id="breakAfter" type="checkbox"> Schneidfolge danach trennen</label></div>
-              <div class="field"><label>Überlappung (mm)</label><input id="overlapMm" type="number" min="0" step="0.1" value="0"></div>
-              <div class="field"><label><input id="loopAtEnd" type="checkbox"> Loop am Abschnittsende</label></div>
-            </div>
-            <div class="section-actions">
-              <button id="toggleCutBtn">Schnitt an/aus</button><button id="reverseDirBtn">Richtung umkehren</button>
-              <button id="addLeadInBtn">Anlauf hinzufügen</button><button id="removeLeadInBtn">Anlauf entfernen</button>
-              <button id="addLeadOutBtn">Auslauf hinzufügen</button><button id="removeLeadOutBtn">Auslauf entfernen</button>
-              <button id="setIhsBtn">IHS-Punkt setzen</button><button id="clearIhsBtn">IHS-Punkt löschen</button>
-              <button id="microjointModeBtn">Mikrosteg setzen</button><button id="clearMicrojointsBtn">Mikrostege löschen</button>
-            </div>
-            <div class="property-fields microjoint-settings">
-              <div class="field"><label>Mikrosteg-Länge (mm)</label><input id="microjointLength" type="number" min="0.1" step="0.1" value="1"></div>
-              <div class="field"><label><input id="microjointCutAtEnd" type="checkbox"> am Ende nachschneiden</label></div>
             </div>
           </div>
 
@@ -124,10 +89,11 @@
               <div class="field"><label><input id="bevelVariable" type="checkbox"> Variable Fase</label></div>
               <div class="field"><label><input id="bevelConstantSlope" type="checkbox"> Gleichbleibende Schräge</label></div>
             </div>
-            <div class="face-grid" id="faceGrid"></div><div class="hint">Alfa1/Alfa2 sowie TP/TN folgen dem ASPER-Bevel-Schema. Bei K-Fase wird die untere Fasenhöhe aus Materialstärke - TP - TN berechnet.</div>
+            <details class="advanced-faces"><summary>Erweiterte Fasenflächen</summary><div class="face-grid" id="faceGrid"></div></details><div class="hint">Alfa1/Alfa2 sowie TP/TN folgen dem ASPER-Bevel-Schema. Bei K-Fase wird die untere Fasenhöhe aus Materialstärke - TP - TN berechnet.</div>
             <div class="bevel-actions"><button id="presetVBtn">V oben 30°</button><button id="presetVBottomBtn">V unten 30°</button><button id="presetYBtn">Y oben 30°</button><button id="presetKBtn">K 30°/30°</button><button id="bevelZeroBtn">Fase aus</button></div>
           </div>
 
+          <div class="tech-reference" id="techReferenceInfo"></div>
           <div class="edge-info" id="edgeInfo"></div>
           <div class="prop-actions"><button id="setStartBtn">Startpunkt setzen</button><button id="clearStartBtn">Startpunkt löschen</button><button id="applyCamToSelection">CAM/Fase auf Auswahl übernehmen</button><button id="applyProperties" class="apply-btn">Eigenschaften übernehmen</button></div>
         </section>
@@ -152,7 +118,7 @@
       <button id="joinBtn">Konturen erkennen</button>
       <button id="mergeSectionsBtn">Abschnitte verbinden</button>
       <button id="autoCamBtn">Schneidfolge automatisch</button><button id="manualOrderBtn">Schneidfolge manuell</button><button id="orderTestBtn">Reihenfolge testen</button>
-      <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="simBackBtn">Sim ←</button><button id="simStepBtn">Sim Schritt</button><button id="simResetBtn">Sim Reset</button><button id="featureMatrixBtn">Funktionsregister</button><button id="referenceBtn">ASPER Referenz</button>
+      <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="referenceBtn">ASPER Referenz</button>
       <button id="dxfBtn">DXF R12 exportieren</button>
       <button id="camPlanBtn">CAM-Plan exportieren</button>
       <button id="fitBtn">Alles anzeigen</button>
@@ -162,11 +128,26 @@
 
   <dialog id="projectDialog">
     <form method="dialog" class="dialog-card">
-      <div class="dialog-head"><strong>Projekt / Maschinenprofil</strong><button value="cancel">×</button></div>
+      <div class="dialog-head"><strong>Projekt / Anlagenaufbau</strong><button value="cancel">×</button></div>
       <div class="property-fields">
         <div class="field wide"><label>Projektname</label><input id="projectName"></div>
-        <div class="field wide"><label>Maschinenprofil</label><select id="machineProfileSelect"></select></div>
+        <div class="field wide"><label>ASPER Werkzeug-/Layerprofil</label><select id="machineProfileSelect"></select></div>
         <div class="field wide"><label>Profilname / Anzeige</label><input id="machineName"></div>
+        <div class="field wide machine-architecture-box">
+          <div class="snapshot-tech-head"><strong>Anlagenaufbau</strong><span class="architecture-badge">Steuerung ≠ Quelle ≠ Verfahren</span></div>
+          <div class="property-fields compact-fields">
+            <div class="field wide"><label>Steuerung / CNC</label><select id="controllerType"></select></div>
+          </div>
+          <div id="stationEditorList" class="station-editor-list"></div>
+          <div class="station-add-grid">
+            <select id="stationProcess"></select>
+            <select id="stationManufacturer"></select>
+            <select id="stationMode"></select>
+            <input id="stationModel" placeholder="Modell optional, z. B. XPR300">
+            <button type="button" id="addStationBtn">Station hinzufügen</button>
+          </div>
+          <div class="hint">Beispiel: iMSNC + Plasma/Hypertherm/Rotator ist eine andere Kombination als Eckelmann + Laser/IPG. Diese Ebenen werden getrennt gespeichert.</div>
+        </div>
         <div class="field"><label>Material</label><input id="materialName"></div>
         <div class="field"><label>Dicke (mm)</label><input id="materialThickness" type="number" min="0" step="0.1"></div>
         <div class="field"><label>Fasenlimit (°)</label><input id="bevelLimit" type="number" min="0" max="50" step="0.1"></div>
@@ -175,33 +156,20 @@
         <div class="field"><label>Postprozessor-Ziel</label><select id="postprocessorTarget"></select></div>
         <div class="field wide"><label>DXF-Layerregelgruppe</label><select id="dxfLayerGroup"><option value="">Keine / automatisch</option></select></div>
         <div class="field wide"><label>ASPER-Konfiguration lokal einlesen</label><label class="file-btn inline-file">param.xml / param-multi.xml / asf.ini / essi.ini<input id="asperConfigInput" type="file" accept=".xml,.ini,.txt,text/xml,text/plain"></label></div>
+        <div class="field wide snapshot-tech-box" id="snapshotTechBox">
+          <div class="snapshot-tech-head"><strong>Technologiereferenz · Hypertherm-Snapshot</strong><span id="snapshotBadge"></span></div>
+          <div class="property-fields compact-fields">
+            <div class="field wide"><label>Zielstation</label><select id="snapshotStation"></select></div>
+            <div class="field"><label>Material</label><select id="snapshotMaterial"></select></div>
+            <div class="field"><label>Dicke</label><select id="snapshotThickness"></select></div>
+            <div class="field wide"><label>Plasma-Prozess</label><select id="snapshotProcess"></select></div>
+          </div>
+          <div id="snapshotTechInfo" class="config-info"></div>
+          <button type="button" id="applySnapshotTechBtn">Technologie als Projektreferenz übernehmen</button>
+          <div class="hint">Der eingebettete Snapshot enthält Hypertherm-XPR-Plasmadaten. Er wird nur angeboten, wenn eine passende Plasma-/Hypertherm-Station existiert. Kjellberg, IPG und Raycus bleiben getrennte Quellen ohne erfundene Parameter.</div>
+        </div>
         <div class="field wide"><div id="machineProfileInfo" class="config-info"></div></div>
       </div>
-      <details class="settings-group" open><summary>Tafel / Eingabe</summary><div class="property-fields settings-fields">
-        <div class="field"><label>Tafelbreite (mm)</label><input id="sheetWidth" type="number" min="1" step="1"></div>
-        <div class="field"><label>Tafelhöhe (mm)</label><input id="sheetHeight" type="number" min="1" step="1"></div>
-        <div class="field"><label>DXF-Einlesetoleranz (mm)</label><input id="inputTolerance" type="number" min="0.001" step="0.01"></div>
-        <div class="field"><label>Schachtelrichtung X</label><select id="nestingX"><option value="left">von links</option><option value="right">von rechts</option></select></div>
-        <div class="field"><label>Schachtelrichtung Y</label><select id="nestingY"><option value="bottom">von unten</option><option value="top">von oben</option></select></div>
-      </div></details>
-      <details class="settings-group"><summary>Technologie / Kompensation</summary><div class="property-fields settings-fields">
-        <div class="field"><label>Schnittfugenkompensation</label><select id="kerfMode"><option value="control">Maschinensteuerung</option><option value="cutai">CutAI offline</option><option value="none">Keine</option></select></div>
-        <div class="field"><label>Standard-Mikrosteg (mm)</label><input id="defaultMicrojointLength" type="number" min="0.1" step="0.1"></div>
-        <div class="field"><label>Standard-Anlauf (mm)</label><input id="defaultLeadInLength" type="number" min="0" step="0.1"></div>
-        <div class="field"><label>Fasen-Anlauffaktor</label><input id="bevelLeadFactor" type="number" min="1" step="0.1"></div>
-        <div class="field"><label>Senkrechter Fasen-Anlauf (mm)</label><input id="defaultBevelVerticalLead" type="number" min="0" step="0.1"></div>
-      </div></details>
-      <details class="settings-group"><summary>Neutrale NC-Ausgabeparameter</summary><div class="property-fields settings-fields">
-        <div class="field"><label><input id="relativeCoordinates" type="checkbox"> relative Koordinaten</label></div>
-        <div class="field"><label><input id="ncComments" type="checkbox"> Kommentare</label></div>
-        <div class="field"><label><input id="forceToolChange" type="checkbox"> Werkzeugwechsel erzwingen</label></div>
-        <div class="field"><label><input id="arcsAsPolylines" type="checkbox"> Bögen als Polylinien</label></div>
-        <div class="field"><label>Polylinien-Toleranz (mm)</label><input id="arcApproxTolerance" type="number" min="0.001" step="0.01"></div>
-        <div class="field"><label>NC-Start</label><select id="ncStartLocation"><option value="bottom-left">unten links</option><option value="top-left">oben links</option><option value="bottom-right">unten rechts</option><option value="top-right">oben rechts</option><option value="xy">XY</option></select></div>
-        <div class="field"><label>NC-Ende</label><select id="ncEndLocation"><option value="none">keine Bewegung</option><option value="return-start">zurück zum Start</option><option value="next-start">zum nächsten Start</option><option value="xy">XY</option></select></div>
-        <div class="field"><label>NC-X (mm)</label><input id="ncPointX" type="number" step="0.1"></div>
-        <div class="field"><label>NC-Y (mm)</label><input id="ncPointY" type="number" step="0.1"></div>
-      </div></details>
       <p class="hint">Das Profil speichert ASPER-Werkzeug- und Layer-Metadaten neutral. Auch bei ausgewähltem Postprozessor-Ziel wird in dieser Version kein ausführbares Maschinen-NC erzeugt.</p>
       <div class="dialog-actions"><button id="saveProjectSettings" value="default">Übernehmen</button><button value="cancel">Abbrechen</button></div>
     </form>
@@ -209,11 +177,12 @@
 
   <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
   <dialog id="referenceDialog"><div class="dialog-card"><div class="dialog-head"><strong>ASPER Referenzstand</strong><button id="closeReference">×</button></div><div id="referenceBody" class="report-body"></div></div></dialog>
-  <dialog id="featureMatrixDialog"><div class="dialog-card wide-dialog"><div class="dialog-head"><strong>CutAI Funktionsregister</strong><button id="closeFeatureMatrix">×</button></div><div id="featureMatrixBody" class="report-body"></div></div></dialog>
 
   <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
-  <script src="asper-reference-v080.js?v=80"></script>
-  <script src="cutai-core-v080.js?v=80"></script>
-  <script src="app-v080.js?v=80"></script>
+  <script src="asper-reference-v075.js?v=75"></script>
+  <script src="machine-architecture-v075.js?v=75"></script>
+  <script src="machine-snapshot-v075.js?v=75"></script>
+  <script src="cutai-core-v075.js?v=75"></script>
+  <script src="app-v075.js?v=75"></script>
 </body>
 </html>
