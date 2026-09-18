@@ -1,22 +1,16 @@
-# CutAI CAD/CAM v0.5
+# CutAI CAD/CAM v0.6
 
 Neu:
-- Konturen rechts in eigener Liste
-- einzelne Konturen per Liste oder direkt in der Zeichnung auswählen
-- Mehrfachauswahl
-- alle Konturen auswählen
-- Auswahl per Finger verschieben
-- exakter Versatz per ΔX / ΔY
-- 1-mm-Nudge-Tasten
-- mehrere Konturen gleichzeitig kopieren
-- CAM-Daten auf komplette Auswahl übernehmen
-- Geometrieänderungen bei Einzelkontur separat übernehmen
-- Startpunkte wandern beim Verschieben mit
-- DXF / SVG / Projekt / CAM-Plan bleiben erhalten
+- Undo und Redo
+- Auswahl Alle / Keine
+- Ansicht 1:1 zurücksetzen
+- Fasenaggregat pro Kontur
+- Fasenwinkel 0 bis 50°
+- Fasenseite links/rechts
+- Fasenart V, Y, K/X oder benutzerdefiniert
+- Steghöhe
+- Schnellwahl 0°, 45°, 50°
+- Fasenparameter auf Mehrfachauswahl übernehmen
+- Fasenparameter im neutralen CAM-Plan und optional im DXF-Layernamen
 
-Workflow:
-1. Kontur antippen oder rechts aus der Konturliste wählen.
-2. Mehrfachauswahl aktivieren, falls mehrere Konturen bearbeitet werden sollen.
-3. Per Finger verschieben oder ΔX/ΔY eingeben.
-4. Technologie/Konturtyp/Richtung einstellen.
-5. `CAM auf Auswahl übernehmen`.
+Wichtig: Die Fase ist aktuell ein neutrales CAM-Attribut. Die konkrete MicroStep-Kinematik und Maschinenbefehle kommen erst mit echter Postprozessor-/Steuerungsdokumentation.
