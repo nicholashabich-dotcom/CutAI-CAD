@@ -1,4 +1,4 @@
-# ASPER / MicroStep Referenz für CutAI v0.7.1
+# ASPER / MicroStep Referenz für CutAI v0.7.2
 
 ## Ausgewertete Bereiche
 
@@ -22,15 +22,15 @@ Die bereitgestellten Module `P_DIN1`, `P_ESSI`, `P_DXF`, `P_Beckhoff`, `P_Eckelm
 
 ### Simulation
 
-`NCSim.exe` bestätigt eine getrennte NC-Simulation mit Werkzeug-, Fasen- und Mehrkopfbezug. V0.7.1 enthält deshalb zunächst eine sichere geometrische CAM-Simulation für Reihenfolge, Schnittweg und Eilweg.
+`NCSim.exe` bestätigt eine getrennte NC-Simulation mit Werkzeug-, Fasen- und Mehrkopfbezug. V0.7.2 enthält deshalb zunächst eine sichere geometrische CAM-Simulation für Reihenfolge, Schnittweg und Eilweg.
 
 ### Nesting
 
-`N32DLL*`, `n64dll.dll`, `AutoNester-T_x64.dll` und `NestMTNG.exe` zeigen, dass Schachtelung ein eigener Baustein ist. Nesting bleibt deshalb bewusst getrennt vom CAD/CAM-Kern und ist noch nicht Teil dieser Version.
+`N32DLL*`, `n64dll.dll`, `AutoNester-T_x64.dll` und `NestMTNG.exe` zeigen, dass Schachtelung ein eigener Baustein ist. Nesting bleibt bewusst als eigener Baustein getrennt. v0.7.2 enthält nur eine einfache Reihen-Schachtelung als Bedien- und Datenmodell-Prototyp, nicht den ASPER-/AutoNester-Algorithmus.
 
 ### Produktions-/Datenbankebene
 
-`CadcamMzm.dll`, `CadcamMZMWrap.dll`, `MZM.dll`, `MRP.dll`, `DataContextsCadcam.dll` und `ConnectionStringManager.dll` betreffen u. a. Projekte, Material, Lager/Restplatten und Produktionsdaten. Diese Ebene wird in v0.7.1 noch nicht angebunden.
+`CadcamMzm.dll`, `CadcamMZMWrap.dll`, `MZM.dll`, `MRP.dll`, `DataContextsCadcam.dll` und `ConnectionStringManager.dll` betreffen u. a. Projekte, Material, Lager/Restplatten und Produktionsdaten. Diese Ebene wird in v0.7.2 noch nicht angebunden.
 
 ### Infrastruktur
 
