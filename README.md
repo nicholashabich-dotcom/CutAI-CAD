@@ -1,41 +1,75 @@
-# CutAI CAD/CAM v0.7.2
+# CutAI CAD/CAM Windows v0.8.1
 
-Mobile-first CAD/CAM-Prototyp mit ASPER-orientiertem Datenmodell. Diese Version erzeugt bewusst **kein direkt ausführbares Maschinen-NC**.
+Windows-11-Desktoppaket auf Basis von CutAI CAD/CAM v0.7.2 und dem bisher ausgewerteten ASPER/MicroStep-Referenzmaterial.
 
-## Neu in v0.7.2
+## Installation auf Windows 11
 
-- obere, horizontal scrollbare Funktionsleiste mit Reitern:
-  Datei, Blechtafel, Bearbeiten, Schachtelung, Ansicht, Punkte, Auswahl, Bewegen, Abschnitt, An- und Ausläufe, Mikrosteg, Schneidfolge, Einstellungen
-- Werkzeugfarben pro Werkzeugcode plus Werkzeuglegende
-- Fasen werden auf der Kontur optisch hervorgehoben und mit Profil/Winkel beschriftet
-- Konturen können in einzelne Abschnitte zerlegt und anschließend wieder verbunden werden
-- Kreis wird beim Auftrennen in vier Bogenabschnitte zerlegt
-- Abschnitte können danach einzeln Werkzeug, Fase und CAM-Eigenschaften erhalten
-- einfache Blechtafel mit frei wählbarer Größe und automatischem Anpassen an die Geometrie
-- einfache Reihen-Schachtelung als funktionaler Vorläufer eines echten Nesting-Moduls
-- Mikrosteg-Markierung im neutralen CAM-Modell
-- Tastenkürzel/Schnellfunktionen, abrufbar unter Einstellungen > Tastenkürzel
-- Projektformat `cutai-cad/0.7.2`, ältere v0.7/v0.7.1-Projekte werden weiter eingelesen
+1. ZIP vollständig entpacken.
+2. `Install-CutAI.cmd` doppelklicken.
+3. Windows PowerShell kopiert CutAI nach `%LOCALAPPDATA%\CutAI CAD`.
+4. Auf Desktop und im Startmenü wird `CutAI CAD` angelegt.
+5. CutAI startet in einem eigenen App-Fenster über Microsoft Edge oder, falls vorhanden, Google Chrome.
 
-## Wichtige Schnellfunktionen
+Für die Installation sind keine Administratorrechte vorgesehen.
 
-- `V` Auswahl, `L` Linie, `Q` Rechteck, `C` Kreis, `A` Bogen, `P` Pan
-- `X` Kontur auftrennen, `J` Abschnitte verbinden, `R` Richtung umkehren
-- `S` Startpunkt setzen, `Shift+S` löschen
-- `G` Fang Ein/Aus, `Shift+G` Raster Ein/Aus
-- `U` Mikrosteg Ein/Aus, `B` Blechtafel Ein/Aus, `N` einfache Schachtelung
-- Pfeiltasten verschieben die Auswahl um 1 mm
-- `[` / `]` verschiebt die Schneidfolge
-- `Ctrl/Cmd+Z`, `Ctrl/Cmd+Y`, `Ctrl/Cmd+D`, `Ctrl/Cmd+A`, `Ctrl/Cmd+S`, `Ctrl/Cmd+O`
+## Neu in v0.8.1
 
-## Werkzeugfarben
+- DXF-Import grundlegend ueberarbeitet
+- erkennt ASCII/ANSI/UTF-8/UTF-16 DXF
+- unterstuetzt LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE, ELLIPSE und SPLINE
+- BLOCK/INSERT-Geometrie wird expandiert
+- LWPOLYLINE/POLYLINE-Bulges werden als echte Bogenabschnitte uebernommen
+- DXF-Boegen werden mit korrekter Richtung importiert/exportiert
+- kleine Konturluecken bis 0,5 mm werden automatisch geschlossen
+- offene Ketten werden nicht als Schneidkontur importiert und im Status gemeldet
+- bei binaerem DXF erscheint eine klare Meldung statt eines stillen Fehlers
 
-Bekannte ASPER-Werkzeugcodes bekommen feste Farben, z. B. T111 blau, T211 orange, T311 rot, T411 grün, T511 gelb, T611 cyan und T12 violett. Unbekannte Werkzeugcodes erhalten deterministisch eine eigene Farbe.
+## Bereits aus v0.8 enthalten
 
-## Fasenanzeige
+- sichtbare Fangpunkte an Endpunkten, Mittelpunkten, Kreismittelpunkten und Quadranten
+- Fangpunkte unter `Punkte > Fangpunkte anzeigen` oder `Shift+P` ein-/ausblendbar
+- der Fang verwendet diese Punkte auch beim Zeichnen
+- aufgetrennte Konturen werden als echte Einzelabschnitte angelegt
+- nach `Kontur auftrennen` wird automatisch Einzelauswahl aktiviert
+- jeder Abschnitt kann separat angeklickt, verschoben und mit eigenem Werkzeug/Fasenprofil versehen werden
+- Werkzeugfarben und Fasenanzeige aus v0.7.2 bleiben erhalten
+- obere ASPER-orientierte Funktionsleiste und Schnellbefehle bleiben erhalten
+- lokaler Windows-Betrieb ohne GitHub erforderlich
 
-Eine Fase wird zusätzlich zur Werkzeugfarbe als orange gestrichelte Kontur dargestellt. Ein Symbol zeigt oben/unten/beidseitig, daneben stehen Profil und aktive Winkel, z. B. `V 30°` oder `K 30°/-30°`.
+## Wichtige Grenze
 
-## Sicherheit / Postprozessor
+CutAI v0.8 erzeugt weiterhin **kein produktionsfreigegebenes Maschinen-NC**. Die aus ASPER/MicroStep-Dateien gewonnenen Informationen werden zur Datenmodellierung und Vorbereitung des Postprozessors verwendet. Vor einer Maschinenanbindung müssen NC-Ausgabe, Werkzeugparameter, Fasenlogik und Maschinenkonfiguration gegen dokumentierte Daten sowie bekannte Gutprogramme validiert werden.
 
-DXF- und neutrale CAM-Plan-Ausgabe sind vorhanden. Maschinen-M-Codes werden weiterhin nicht als produktionsfertige Ausgabe erzeugt, solange die maschinenspezifischen Parameter und Postprozessorregeln nicht validiert sind.
+## Deinstallation
+
+Im Startmenü `CutAI CAD deinstallieren` wählen oder `Uninstall-CutAI.cmd` aus dem Installationsordner ausführen.
+
+## Tastenkürzel
+
+- `V` Auswahl
+- `L` Linie
+- `Q` Rechteck
+- `C` Kreis
+- `A` Bogen
+- `P` Pan
+- `G` Fang Ein/Aus
+- `Shift+P` Fangpunkte anzeigen/ausblenden
+- `X` Kontur auftrennen
+- `J` Abschnitte verbinden
+- `R` Richtung umkehren
+- `S` Startpunkt setzen
+- `Shift+S` Startpunkt löschen
+- `M` Mehrfachauswahl
+- Pfeiltasten Auswahl um 1 mm bewegen
+- `[` / `]` Schneidfolge vor/zurück
+- `Ctrl+Z` / `Ctrl+Y` Rückgängig / Wiederholen
+- `Ctrl+S` Projekt speichern
+- `Ctrl+O` Projekt laden
+- `Ctrl+I` DXF importieren
+- `F1` Anleitung öffnen
+
+
+
+## DXF-Hinweis
+
+CutAI v0.8.1 verarbeitet textbasierte DXF-Dateien direkt. Wenn im Status `Binaeres DXF erkannt` erscheint, muss die Datei derzeit als ASCII-DXF (z. B. R12 oder R2000 ASCII) gespeichert werden. Nicht geschlossene Ketten werden bewusst nicht als Schneidkonturen uebernommen.

@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CutAI CAD/CAM v0.7.2</title>
-  <link rel="manifest" href="manifest-v072.webmanifest">
-  <link rel="stylesheet" href="styles-v072.css?v=72">
+  <title>CutAI CAD/CAM v0.8.1</title>
+  <link rel="manifest" href="manifest-v081.webmanifest">
+  <link rel="stylesheet" href="styles-v081.css?v=80">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.2 · ASPER-orientierter Kern</span></div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.8.1 · Windows Desktop · ASPER-orientierter Kern</span></div>
     <div class="top-actions"><button id="projectBtn">Projekt / Maschine</button><span id="status">Bereit · mm</span></div>
   </header>
   <nav class="menubar" id="menubar" aria-label="Hauptfunktionen"></nav>
@@ -28,6 +28,7 @@
       <button class="tool" data-tool="pan">✋<small>Pan</small></button>
       <button id="multiBtn">☷<small>Mehrfach</small></button>
       <button id="snapBtn" class="active">⌖<small>Fang an</small></button>
+      <button id="snapPointsBtn" class="active">⊙<small>Fangpunkte</small></button>
       <button id="duplicateBtn">⧉<small>Kopieren</small></button>
       <button id="undoBtn">↶<small>Zurück</small></button>
       <button id="redoBtn">↷<small>Vor</small></button>
@@ -42,7 +43,7 @@
             <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#minorGrid)"/><path d="M100 0 L0 0 0 100" class="grid major"/></pattern>
           </defs>
           <rect id="gridRect" x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
-          <g id="sheetLayer"></g><g id="geometry"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
+          <g id="sheetLayer"></g><g id="geometry"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"><g id="snapPointsLayer"></g><g id="snapCursorLayer"></g></g>
         </svg>
         <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
@@ -103,7 +104,7 @@
       <button id="newBtn">Neu</button>
       <button id="saveBtn">Projekt speichern</button>
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
-      <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,text/plain"></label>
+      <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,application/dxf,application/x-dxf,image/vnd.dxf,text/plain"></label>
       <label class="file-btn">SVG importieren<input id="svgInput" type="file" accept=".svg,image/svg+xml"></label>
       <button id="joinBtn">Konturen erkennen</button><button id="splitBtn">Kontur auftrennen</button>
       <button id="autoCamBtn">CAM automatisch</button>
@@ -143,7 +144,7 @@
 
   <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
   <script src="asper-reference-v071.js?v=72"></script>
-  <script src="cutai-core-v07.js?v=72"></script>
-  <script src="app-v072.js?v=72"></script>
+  <script src="cutai-core-v081.js?v=81"></script>
+  <script src="app-v081.js?v=81"></script>
 </body>
 </html>

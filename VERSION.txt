@@ -1,0 +1,6 @@
+CutAI CAD/CAM Windows v0.8.1
+Build: 2026-09-18
+Basis: CutAI v0.8 + robuster DXF-Importer
+DXF: ASCII/ANSI/UTF-8/UTF-16; LINE, ARC, CIRCLE, LWPOLYLINE, POLYLINE, ELLIPSE, SPLINE, INSERT/BLOCK
+Konturen: nur geschlossene Konturen werden als Schneidkonturen importiert; kleine Luecken bis 0,5 mm werden automatisch geschlossen
+Maschinen-NC: deaktiviert / nicht produktionsfreigegeben
