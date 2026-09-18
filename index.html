@@ -6,14 +6,14 @@
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CutAI CAD/CAM v0.7.5</title>
-  <link rel="manifest" href="manifest-v075.webmanifest">
-  <link rel="stylesheet" href="styles-v075.css?v=75">
+  <title>CutAI CAD/CAM v0.7.7</title>
+  <link rel="manifest" href="manifest-v077.webmanifest">
+  <link rel="stylesheet" href="styles-v077.css?v=77">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.5 · Anlagenaufbau, Technologien & Fasen</span></div>
-    <div class="top-actions"><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option><option value="order">Schneidfolge</option></select></label><button id="projectBtn">Projekt / Anlage</button><span id="status">Bereit · mm</span></div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.7 · Maschinenpakete, Technologien & KI</span></div>
+    <div class="top-actions"><button id="aiBtn" class="ai-top-btn">✦ KI Eingabe</button><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option><option value="order">Schneidfolge</option></select></label><button id="projectBtn">Projekt / Anlage</button><span id="status">Bereit · mm</span></div>
   </header>
 
   <main class="app">
@@ -156,17 +156,23 @@
         <div class="field"><label>Postprozessor-Ziel</label><select id="postprocessorTarget"></select></div>
         <div class="field wide"><label>DXF-Layerregelgruppe</label><select id="dxfLayerGroup"><option value="">Keine / automatisch</option></select></div>
         <div class="field wide"><label>ASPER-Konfiguration lokal einlesen</label><label class="file-btn inline-file">param.xml / param-multi.xml / asf.ini / essi.ini<input id="asperConfigInput" type="file" accept=".xml,.ini,.txt,text/xml,text/plain"></label></div>
+        <div class="field wide machine-package-box">
+          <div class="snapshot-tech-head"><strong>Maschinen-Snapshot</strong><span class="architecture-badge">wird nur lokal gelesen</span></div>
+          <label class="file-btn inline-file">Machine-Snapshot ZIP laden<input id="machinePackageInput" type="file" accept=".zip,application/zip"></label>
+          <div id="machinePackageInfo" class="config-info">Noch kein Maschinenpaket geladen.</div>
+          <div class="hint">CutAI liest machine.ini, aktive Tool-Stacks, Tool_*.ini und passende Tools/Txx-Technologien direkt im Browser. Die Snapshot-Datei wird nicht hochgeladen.</div>
+        </div>
         <div class="field wide snapshot-tech-box" id="snapshotTechBox">
-          <div class="snapshot-tech-head"><strong>Technologiereferenz · Hypertherm-Snapshot</strong><span id="snapshotBadge"></span></div>
+          <div class="snapshot-tech-head"><strong>Technologiereferenz · aktive Maschine</strong><span id="snapshotBadge"></span></div>
           <div class="property-fields compact-fields">
             <div class="field wide"><label>Zielstation</label><select id="snapshotStation"></select></div>
             <div class="field"><label>Material</label><select id="snapshotMaterial"></select></div>
             <div class="field"><label>Dicke</label><select id="snapshotThickness"></select></div>
-            <div class="field wide"><label>Plasma-Prozess</label><select id="snapshotProcess"></select></div>
+            <div class="field wide"><label>Technologieprofil</label><select id="snapshotProcess"></select></div>
           </div>
           <div id="snapshotTechInfo" class="config-info"></div>
           <button type="button" id="applySnapshotTechBtn">Technologie als Projektreferenz übernehmen</button>
-          <div class="hint">Der eingebettete Snapshot enthält Hypertherm-XPR-Plasmadaten. Er wird nur angeboten, wenn eine passende Plasma-/Hypertherm-Station existiert. Kjellberg, IPG und Raycus bleiben getrennte Quellen ohne erfundene Parameter.</div>
+          <div class="hint">Die Liste stammt aus dem lokal geladenen Maschinenpaket. Hersteller, Verfahren und Technologiedateien bleiben getrennt; CutAI erfindet keine Parameter für Quellen, die im Paket nicht vorhanden sind.</div>
         </div>
         <div class="field wide"><div id="machineProfileInfo" class="config-info"></div></div>
       </div>
@@ -175,14 +181,34 @@
     </form>
   </dialog>
 
+  <dialog id="aiDialog">
+    <div class="dialog-card ai-dialog-card">
+      <div class="dialog-head"><div><strong>KI-Eingabe</strong><div class="hint">CAD/CAM-Auftrag in normaler Sprache formulieren. Änderungen werden immer zuerst als Plan angezeigt.</div></div><button id="closeAi">×</button></div>
+      <textarea id="aiPrompt" class="ai-prompt" rows="6" placeholder="z. B. S235 10 mm. Geladene Kjellberg HiFocus 280 Station mit 130 A. Rechteck 300 x 200, vier Löcher Ø12 mit 20 mm Eckabstand. Schneidfolge automatisch."></textarea>
+      <div class="ai-toolbar">
+        <button id="aiExampleBtn">Beispiel</button><button id="aiVoiceBtn">🎙 Diktieren</button><button id="aiPlanBtn" class="ai-primary">Plan erstellen</button>
+      </div>
+      <details class="ai-online"><summary>Online-KI verbinden</summary>
+        <p class="hint">Für echte Modell-KI braucht die GitHub-Pages-App einen serverseitigen Proxy. Kein API-Schlüssel gehört in diese Webseite.</p>
+        <div class="property-fields"><div class="field wide"><label>HTTPS-Endpunkt</label><input id="aiEndpoint" type="url" placeholder="https://dein-server.example/cutai-ai"></div><div class="field"><label><input id="aiUseOnline" type="checkbox"> Online-KI verwenden</label></div><div class="field wide"><label><input id="aiShareMachineData" type="checkbox"> Maschinen-/Technologiekontext an Online-KI senden</label><div class="hint">Standardmäßig aus. Bei Aktivierung werden die im lokalen Maschinenpaket erkannten Stationen und eine begrenzte Technologieliste an deinen KI-Endpunkt gesendet.</div></div></div>
+      </details>
+      <div id="aiContext" class="ai-context"></div>
+      <div id="aiPlanPreview" class="ai-plan-preview"><span class="hint">Noch kein Plan erstellt.</span></div>
+      <div class="dialog-actions"><button id="aiExecuteBtn" class="ai-execute" disabled>Plan ausführen</button><button id="aiClearBtn">Leeren</button></div>
+      <p class="hint">Die KI-Ebene ändert nur das CutAI-Projekt. Sie erzeugt in dieser Version kein ausführbares Maschinen-NC und sendet ohne aktivierten Online-Modus keine Daten ins Netz.</p>
+    </div>
+  </dialog>
+
   <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
   <dialog id="referenceDialog"><div class="dialog-card"><div class="dialog-head"><strong>ASPER Referenzstand</strong><button id="closeReference">×</button></div><div id="referenceBody" class="report-body"></div></div></dialog>
 
   <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
-  <script src="asper-reference-v075.js?v=75"></script>
-  <script src="machine-architecture-v075.js?v=75"></script>
-  <script src="machine-snapshot-v075.js?v=75"></script>
-  <script src="cutai-core-v075.js?v=75"></script>
-  <script src="app-v075.js?v=75"></script>
+  <script src="jszip.min.js?v=77"></script>
+  <script src="asper-reference-v077.js?v=77"></script>
+  <script src="machine-architecture-v077.js?v=77"></script>
+  <script src="machine-package-v077.js?v=77"></script>
+  <script src="cutai-core-v077.js?v=77"></script>
+  <script src="cutai-ai-v077.js?v=77"></script>
+  <script src="app-v077.js?v=77"></script>
 </body>
 </html>

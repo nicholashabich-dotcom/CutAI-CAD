@@ -1,42 +1,29 @@
-# ASPER / MicroStep Referenz für CutAI v0.7.5
+# ASPER / MicroStep Referenz für CutAI v0.7.7
 
-## Warum das Maschinenmodell getrennt ist
+## Getrenntes Maschinenmodell
 
-Die ASPER-Unterlagen behandeln die Auswahl des Postprozessors und die Werkzeugkonfiguration als getrennte Einstellungen. Der Schulungsleitfaden nennt „DIN“ für MicroStep-Anlagen und „Eckelmann“ für MSE SmartFL-Anlagen, während Werkzeuge abhängig von Maschinentyp und Konfiguration separat definiert werden.
+Die ASPER-Unterlagen behandeln Postprozessor, Werkzeugkonfiguration und Technologieparameter als getrennte Ebenen. CutAI bildet deshalb nicht „Maschine = Plasmaquelle“ ab, sondern trennt Steuerung, Bearbeitungsstation, Verfahren, Hersteller/Quelle, Kopfkinematik, Werkzeug und Technologiereferenz.
 
-CutAI bildet deshalb nicht mehr „Maschine = Hypertherm“ oder „Maschine = Laser“ ab. Stattdessen gibt es die Ebenen:
+## Maschinenpakete statt fest eingebetteter Technologiedaten
 
-1. Steuerung/CNC
-2. Bearbeitungsstation
-3. Verfahren
-4. Hersteller/Quelle
-5. Kopfkinematik/Ausführung
-6. Werkzeug
-7. herstellerspezifische Technologiereferenz
+Reale Maschinen-Snapshots werden in v0.7.7 nicht in den öffentlichen Quellcode eingebettet. Der Benutzer lädt eine Snapshot-ZIP lokal im Browser. Der Parser liest daraus die aktive Maschinenkonfiguration und die zugehörigen Technologie-INIs.
 
-## Aktuell bekannte Hersteller-/Verfahrensgruppen
-
-- Plasma: Hypertherm, Kjellberg, generisch
-- Laser: IPG, Raycus, generisch
-- Autogen
-- Bohren
-- Wasserstrahl
-
-Plasma kann als senkrechte Station oder Rotator/Bevel-Station angelegt werden. Eine Rotator/Bevel-Station kann sowohl das senkrechte Werkzeug als auch Fasenwerkzeuge führen.
-
-## Snapshot-Grenze
-
-Der bislang analysierte Machine Snapshot liefert Hypertherm-XPR-Plasmatechnologien und Fasen-Korrekturreferenzen. Diese Daten dürfen nur an passende Hypertherm-Plasmastationen gebunden werden. Für Kjellberg, IPG und Raycus liegen aus den bisher bereitgestellten Quellen keine gleichartigen Technologie-Kataloge vor.
+Die bereitgestellten Snapshots dienen als Testfälle für unterschiedliche Maschinenkonfigurationen. CutAI unterscheidet zwischen **aktiv konfigurierter Station** und lediglich im Paket vorhandener Definition/Vorlage und übernimmt keine kundenspezifischen Adressdaten in den öffentlichen Programmcode.
 
 ## Abschnittsmodell und Fasen
 
 ASPER unterscheidet Entity, Section, Chain und Part. Eine Chain kann für spezielle technologische Operationen in mehrere Sections aufgetrennt werden. Fasendefinitionen wirken auf komplette Abschnitte. CutAI hält deshalb `chainId`, `sectionIndex`, `stationId` und eigene CAM-Parameter pro Abschnitt vor.
+
+## KI-Ebene
+
+Die KI-Eingabe ist eine eigenständige CutAI-Funktion. Sie übersetzt Sprache in ein begrenztes internes CAD/CAM-Aktionsmodell. Bei geladenem Maschinenpaket darf der lokale Planer nur tatsächlich erkannte aktive Stationen und vorhandene Technologieprofile referenzieren. Mehrdeutige oder fehlende Technologien werden gemeldet statt erfunden.
 
 ## Noch bewusst nicht implementiert
 
 - freigegebener MicroStep-DIN-Postprozessor
 - freigegebener Eckelmann-Postprozessor
 - direkte Maschinenkommunikation
-- herstellerspezifische Technologie-Datenbanken für Kjellberg, IPG und Raycus
 - vollständige ATHC-/Höhenkontrolllogik
 - Corner-Loops als maschinenspezifische Technologie
+
+CutAI v0.7.7 erzeugt keinen maschinenausführbaren NC-Code.
