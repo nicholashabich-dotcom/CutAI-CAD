@@ -6,13 +6,13 @@
   <meta name="theme-color" content="#111827">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>CutAI CAD/CAM v0.8.1</title>
-  <link rel="manifest" href="manifest-v081.webmanifest">
-  <link rel="stylesheet" href="styles-v081.css?v=81">
+  <title>CutAI CAD/CAM v0.7.9</title>
+  <link rel="manifest" href="manifest-v079.webmanifest">
+  <link rel="stylesheet" href="styles-v079.css?v=79">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.8.1 · NC/DIN-Analyse & Maschinenprofil</span></div>
+    <div class="brand"><strong>CutAI CAD/CAM</strong><span>v0.7.9 · Schablonen, reale NC-Referenz & KI</span></div>
     <div class="top-actions"><button id="aiBtn" class="ai-top-btn">✦ KI Eingabe</button><label class="view-select"><span>Ansicht</span><select id="viewMode"><option value="tool">Werkzeuge</option><option value="normal">Normal</option><option value="bevel">Fasen</option><option value="order">Schneidfolge</option></select></label><button id="projectBtn">Projekt / Anlage</button><span id="status">Bereit · mm</span></div>
   </header>
 
@@ -41,7 +41,7 @@
             <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse"><rect width="100" height="100" fill="url(#minorGrid)"/><path d="M100 0 L0 0 0 100" class="grid major"/></pattern>
           </defs>
           <rect x="-10000" y="-10000" width="20000" height="20000" fill="url(#majorGrid)"/>
-          <g id="geometry"></g><g id="bevelLayer"></g><g id="leadLayer"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="aiPreviewLayer"></g><g id="preview"></g><g id="snapLayer"></g>
+          <g id="geometry"></g><g id="bevelLayer"></g><g id="leadLayer"></g><g id="dimensions"></g><g id="camMarkers"></g><g id="simLayer"></g><g id="preview"></g><g id="snapLayer"></g>
         </svg>
         <div class="coords" id="coords">X 0.0 · Y 0.0 mm</div>
 
@@ -115,15 +115,15 @@
       <label class="file-btn">Projekt laden<input id="loadInput" type="file" accept=".json,application/json"></label>
       <label class="file-btn">DXF importieren<input id="dxfInput" type="file" accept=".dxf,text/plain"></label>
       <label class="file-btn">SVG importieren<input id="svgInput" type="file" accept=".svg,image/svg+xml"></label>
+      <button id="fileReferenceBtn">CNC / PLA Referenz</button>
       <button id="joinBtn">Konturen erkennen</button>
       <button id="mergeSectionsBtn">Abschnitte verbinden</button>
       <button id="autoCamBtn">Schneidfolge automatisch</button><button id="manualOrderBtn">Schneidfolge manuell</button><button id="orderTestBtn">Reihenfolge testen</button>
       <button id="validateBtn">CAM prüfen</button><button id="simBtn">CAM Simulation</button><button id="referenceBtn">ASPER Referenz</button>
       <button id="dxfBtn">DXF R12 exportieren</button>
       <button id="camPlanBtn">CAM-Plan exportieren</button>
-      <label class="file-btn nc-file-btn">NC/DIN analysieren<input id="ncInput" type="file" accept=".cnc,.nc,.din,.txt,text/plain"></label>
       <button id="fitBtn">Alles anzeigen</button>
-      <button id="resetViewBtn">Ansicht 1:1</button><button id="aiUndoBtn" disabled>✦ KI-Schritt zurück</button>
+      <button id="resetViewBtn">Ansicht 1:1</button>
     </div>
   </section>
 
@@ -157,17 +157,26 @@
         <div class="field"><label>Postprozessor-Ziel</label><select id="postprocessorTarget"></select></div>
         <div class="field wide"><label>DXF-Layerregelgruppe</label><select id="dxfLayerGroup"><option value="">Keine / automatisch</option></select></div>
         <div class="field wide"><label>ASPER-Konfiguration lokal einlesen</label><label class="file-btn inline-file">param.xml / param-multi.xml / asf.ini / essi.ini<input id="asperConfigInput" type="file" accept=".xml,.ini,.txt,text/xml,text/plain"></label></div>
+
+        <div class="field wide machine-package-box">
+          <div class="snapshot-tech-head"><strong>ASPER Schablonen</strong><span class="architecture-badge">lokal · CFG / PLB</span></div>
+          <label class="file-btn inline-file">Schablonen-ZIP laden<input id="templateZipInput" type="file" accept=".zip,application/zip"></label>
+          <div id="templateLibraryInfo" class="config-info">Noch keine Schablonenbibliothek geladen.</div>
+          <div class="property-fields compact-fields">
+            <div class="field"><label>Profil / Anlage</label><select id="templateProfile"></select></div>
+            <div class="field"><label>Materialgruppe</label><select id="templateMaterial"></select></div>
+            <div class="field"><label>Dicke</label><select id="templateThickness"></select></div>
+            <div class="field wide"><label>Schablone</label><select id="templateSelect"></select></div>
+          </div>
+          <button type="button" id="applyTemplateBtn">Schablone als Projektreferenz übernehmen</button>
+          <div id="templateDetail" class="config-info"></div>
+          <div class="hint">CutAI indexiert die ASPER-CFG/PLB-Dateien lokal. Die nativen Binärformate werden nicht verändert; Material, Dicke, Dateiname sowie sichtbare Profil-/Werkzeugkennungen dienen als Referenz für Projekt und KI.</div>
+        </div>
         <div class="field wide machine-package-box">
           <div class="snapshot-tech-head"><strong>Maschinen-Snapshot</strong><span class="architecture-badge">wird nur lokal gelesen</span></div>
           <label class="file-btn inline-file">Machine-Snapshot ZIP laden<input id="machinePackageInput" type="file" accept=".zip,application/zip"></label>
           <div id="machinePackageInfo" class="config-info">Noch kein Maschinenpaket geladen.</div>
           <div class="hint">CutAI liest machine.ini, aktive Tool-Stacks, Tool_*.ini und passende Tools/Txx-Technologien direkt im Browser. Die Snapshot-Datei wird nicht hochgeladen.</div>
-        </div>
-        <div class="field wide machine-assistant-box" id="machineAssistantBox">
-          <div class="snapshot-tech-head"><strong>Maschinenprofil-Assistent</strong><span id="machineAssistBadge">wartet auf Snapshot</span></div>
-          <div id="machineAssistantBody" class="config-info">Nach dem Laden eines Snapshots werden Steuerung, aktive Stationen, Fähigkeiten und Technologiekatalog automatisch zusammengefasst.</div>
-          <label class="switch-row machine-bind-row"><input id="bindMachineProject" type="checkbox" checked> Projekt an dieses Maschinenprofil binden</label>
-          <div class="hint">Bei einem später geladenen, abweichenden Maschinenprofil warnt CutAI vor nicht verfügbaren Stationen und Technologien.</div>
         </div>
         <div class="field wide snapshot-tech-box" id="snapshotTechBox">
           <div class="snapshot-tech-head"><strong>Technologiereferenz · aktive Maschine</strong><span id="snapshotBadge"></span></div>
@@ -201,38 +210,34 @@
       </details>
       <div id="aiContext" class="ai-context"></div>
       <div id="aiPlanPreview" class="ai-plan-preview"><span class="hint">Noch kein Plan erstellt.</span></div>
-      <div id="aiPreflight" class="ai-preflight"></div>
-      <div class="dialog-actions"><button id="aiExecuteBtn" class="ai-execute" disabled>Plan ausführen</button><button id="aiUndoDialogBtn" disabled>KI-Schritt zurück</button><button id="aiClearBtn">Leeren</button></div>
+      <div class="dialog-actions"><button id="aiExecuteBtn" class="ai-execute" disabled>Plan ausführen</button><button id="aiClearBtn">Leeren</button></div>
       <p class="hint">Die KI-Ebene ändert nur das CutAI-Projekt. Sie erzeugt in dieser Version kein ausführbares Maschinen-NC und sendet ohne aktivierten Online-Modus keine Daten ins Netz.</p>
     </div>
   </dialog>
 
 
-  <dialog id="ncDialog">
-    <div class="dialog-card nc-dialog-card">
-      <div class="dialog-head"><div><strong>NC/DIN-Analyse</strong><div class="hint">ASPER-/Maschinenprogramm lesen, Bahn rekonstruieren und mit dem neutralen CutAI-CAM vergleichen.</div></div><button id="closeNc">×</button></div>
-      <div class="nc-headline"><span id="ncFileName">Noch kein NC geladen.</span><span id="ncDialectBadge" class="architecture-badge">generischer DIN-Parser</span></div>
-      <div id="ncSummary" class="nc-summary"><span class="hint">NC/DIN/CNC-Datei laden.</span></div>
-      <svg id="ncPreview" class="nc-preview" viewBox="0 0 1000 520" preserveAspectRatio="xMidYMid meet" aria-label="NC-Werkzeugbahn"></svg>
-      <div class="nc-actions"><button id="ncCompareBtn">Mit CutAI-CAM vergleichen</button><button id="ncExportAnalysisBtn">Analyse JSON exportieren</button></div>
-      <div id="ncCompare" class="nc-compare"></div>
-      <details open><summary>Erkannte Befehle / Ereignisse</summary><div id="ncEvents" class="nc-events"></div></details>
-      <details><summary>NC-Text</summary><pre id="ncCode" class="nc-code"></pre></details>
-      <p class="hint">Die Analyse interpretiert nur dokumentierte bzw. im geladenen CNCDEF.INI erkannte Befehle. Sie ist keine Maschinenfreigabe und erzeugt keinen ausführbaren NC-Code.</p>
+  <dialog id="fileReferenceDialog">
+    <div class="dialog-card">
+      <div class="dialog-head"><div><strong>ASPER CNC / PLA Referenz</strong><div class="hint">Dateien werden ausschließlich lokal gelesen. Keine NC-Datei wird ausgeführt oder an eine Maschine gesendet.</div></div><button id="closeFileReference">×</button></div>
+      <label class="file-btn inline-file">CNC / PLA laden<input id="fileReferenceInput" type="file" accept=".cnc,.din,.esi,.rez,.pla,text/plain"></label>
+      <div id="fileReferenceInfo" class="report-body"><span class="hint">Noch keine Referenzdatei geladen.</span></div>
+      <div class="dialog-actions"><button id="applyReferenceMetaBtn" disabled>Referenzdaten übernehmen</button><button id="importCncGeometryBtn" disabled>CNC-Kontur ins Projekt übernehmen</button><button id="compareReferenceBtn" disabled>Mit Projekt vergleichen</button><button id="clearFileReferenceBtn">Leeren</button></div>
+      <p class="hint">Der CNC-Leser ist ein Offline-Referenzparser. Er liest beobachtete DIN-Bewegungen, Werkzeugwahl, Kompensation, An-/Auslauf-Kommentare und Konturzüge. PLA bleibt ein natives Binärformat und wird in v0.7.9 bewusst nur auf sichtbare Metadaten, Profil- und Werkzeugkennungen untersucht.</p>
     </div>
   </dialog>
 
-  <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
+  <dialog id="reportDialog"><div class="dialog-card"><div class="dialog-head"><strong>CAM-Prüfung / Referenzvergleich</strong><button id="closeReport">×</button></div><div id="reportBody" class="report-body"></div></div></dialog>
   <dialog id="referenceDialog"><div class="dialog-card"><div class="dialog-head"><strong>ASPER Referenzstand</strong><button id="closeReference">×</button></div><div id="referenceBody" class="report-body"></div></div></dialog>
 
   <script>if("serviceWorker" in navigator)navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if("caches" in window)caches.keys().then(keys=>keys.forEach(k=>caches.delete(k)));</script>
-  <script src="jszip.min.js?v=81"></script>
-  <script src="asper-reference-v080.js?v=81"></script>
-  <script src="machine-architecture-v080.js?v=81"></script>
-  <script src="nc-analyzer-v081.js?v=81"></script>
-  <script src="machine-package-v081.js?v=81"></script>
-  <script src="cutai-core-v080.js?v=81"></script>
-  <script src="cutai-ai-v080.js?v=81"></script>
-  <script src="app-v081.js?v=81"></script>
+  <script src="jszip.min.js?v=79"></script>
+  <script src="asper-reference-v079.js?v=79"></script>
+  <script src="machine-architecture-v079.js?v=79"></script>
+  <script src="machine-package-v079.js?v=79"></script>
+  <script src="asper-templates-v079.js?v=79"></script>
+  <script src="asper-file-reference-v079.js?v=79"></script>
+  <script src="cutai-core-v079.js?v=79"></script>
+  <script src="cutai-ai-v079.js?v=79"></script>
+  <script src="app-v079.js?v=79"></script>
 </body>
 </html>
