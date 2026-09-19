@@ -1,29 +1,19 @@
-# ASPER / MicroStep Referenz für CutAI v0.7.7
+# ASPER / iMSNC Referenzstand für CutAI v0.8.1
 
-## Getrenntes Maschinenmodell
+CutAI orientiert sein internes Modell an den bereitgestellten ASPER-5-Unterlagen und Maschinen-Snapshots.
 
-Die ASPER-Unterlagen behandeln Postprozessor, Werkzeugkonfiguration und Technologieparameter als getrennte Ebenen. CutAI bildet deshalb nicht „Maschine = Plasmaquelle“ ab, sondern trennt Steuerung, Bearbeitungsstation, Verfahren, Hersteller/Quelle, Kopfkinematik, Werkzeug und Technologiereferenz.
+Wichtige Modellbegriffe:
+- Entity: Linie, Polylinie, Kreis oder Bogen.
+- Section / Abschnitt: Gruppe benachbarter Entities mit gemeinsamen technologischen Eigenschaften.
+- Chain / Kette: Gruppe benachbarter Abschnitte; Außenkontur und Innenketten bilden ein Part.
+- Lead-in / Lead-out, Startpunkt, Kompensation und Schneidfolge bleiben eigene CAM-Eigenschaften.
+- Fasen werden abschnittsweise definiert; deshalb können Ketten in mehrere Abschnitte aufgeteilt werden.
 
-## Maschinenpakete statt fest eingebetteter Technologiedaten
+NC/DIN in v0.8.1:
+- Machine-Snapshots werden nach `CNCDEF.INI` durchsucht.
+- Aus `CNCDEF.INI` werden erlaubte G-/M-Befehle, interne Befehlsnamen, Argumentmuster sowie `CIRCLE_CENTER=ABS/REL` gelesen.
+- G0/G1/G2/G3 und G90/G91 werden geometrisch interpretiert.
+- Bekannte Sonderbefehle wie M6, M26, M29, M34/M35, M90, M94, M102, M120, M121, M122, M123 und M134 werden als Ereignisse angezeigt, aber nicht zur Maschinensteuerung ausgeführt.
+- Maschinenabhängige Semantik wird nicht erfunden. Wo ein Befehl nur als PARAM/SWITCH definiert ist, bleibt die Analyse entsprechend vorsichtig.
 
-Reale Maschinen-Snapshots werden in v0.7.7 nicht in den öffentlichen Quellcode eingebettet. Der Benutzer lädt eine Snapshot-ZIP lokal im Browser. Der Parser liest daraus die aktive Maschinenkonfiguration und die zugehörigen Technologie-INIs.
-
-Die bereitgestellten Snapshots dienen als Testfälle für unterschiedliche Maschinenkonfigurationen. CutAI unterscheidet zwischen **aktiv konfigurierter Station** und lediglich im Paket vorhandener Definition/Vorlage und übernimmt keine kundenspezifischen Adressdaten in den öffentlichen Programmcode.
-
-## Abschnittsmodell und Fasen
-
-ASPER unterscheidet Entity, Section, Chain und Part. Eine Chain kann für spezielle technologische Operationen in mehrere Sections aufgetrennt werden. Fasendefinitionen wirken auf komplette Abschnitte. CutAI hält deshalb `chainId`, `sectionIndex`, `stationId` und eigene CAM-Parameter pro Abschnitt vor.
-
-## KI-Ebene
-
-Die KI-Eingabe ist eine eigenständige CutAI-Funktion. Sie übersetzt Sprache in ein begrenztes internes CAD/CAM-Aktionsmodell. Bei geladenem Maschinenpaket darf der lokale Planer nur tatsächlich erkannte aktive Stationen und vorhandene Technologieprofile referenzieren. Mehrdeutige oder fehlende Technologien werden gemeldet statt erfunden.
-
-## Noch bewusst nicht implementiert
-
-- freigegebener MicroStep-DIN-Postprozessor
-- freigegebener Eckelmann-Postprozessor
-- direkte Maschinenkommunikation
-- vollständige ATHC-/Höhenkontrolllogik
-- Corner-Loops als maschinenspezifische Technologie
-
-CutAI v0.7.7 erzeugt keinen maschinenausführbaren NC-Code.
+Die bereitgestellten Binärdateien werden nicht ausgeführt. Der aktuelle Stand ist Analyse und Referenz, kein validierter Postprozessor.

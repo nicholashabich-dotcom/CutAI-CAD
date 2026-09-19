@@ -162,8 +162,6 @@
     if(out.geometry.kind==="circle"){out.geometry.cx+=dx;out.geometry.cy+=dy}
     else out.geometry.segments=out.geometry.segments.map(s=>translateSegment(s,dx,dy));
     if(out.cam&&out.cam.startPoint){out.cam.startPoint.x+=dx;out.cam.startPoint.y+=dy}
-    if(out.cam&&out.cam.ihsPoint){out.cam.ihsPoint.x+=dx;out.cam.ihsPoint.y+=dy}
-    if(out.cam&&Array.isArray(out.cam.microjoints))for(const m of out.cam.microjoints){if(m?.point){m.point.x+=dx;m.point.y+=dy}}
     return out;
   }
 
@@ -292,9 +290,8 @@
   function validateProject(project){
     const warnings=[],errors=[];const limit=Number(project.machineProfile?.bevelAngleLimitDeg??50);
     for(const c of project.contours||[]){const label=c.name||c.id||"Kontur";const role=c.cam?.tool?.role||"cut";
-      const enabled=c.cam?.enabled!==false;
-      if(enabled&&role==="cut"&&!c.closed&&!c.chainClosed)warnings.push(`${label}: offene Kontur mit Schneidwerkzeug.`);
-      if(enabled&&role==="cut"&&!c.cam?.startPoint)warnings.push(`${label}: kein Startpunkt gesetzt.`);
+      if(role==="cut"&&!c.closed&&!c.chainClosed)warnings.push(`${label}: offene Kontur mit Schneidwerkzeug.`);
+      if(role==="cut"&&!c.cam?.startPoint)warnings.push(`${label}: kein Startpunkt gesetzt.`);
       const kerf=Number(c.cam?.kerfMm??0);if(!Number.isFinite(kerf)||kerf<0)errors.push(`${label}: ungültige Schnittfuge.`);
       if(c.cam?.bevel?.enabled){
         const b=c.cam.bevel,faces=(b.faces||[]).filter(f=>f&&f.enabled),a1=Math.abs(Number(b.alpha1Deg)||0),a2=Math.abs(Number(b.alpha2Deg)||0),tp=Math.max(0,Number(b.topHeightMm)||0),tn=Math.max(0,Number(b.landMm)||0),th=Math.max(0,Number(project.material?.thicknessMm)||0);
@@ -306,12 +303,7 @@
         if(b.variable&&c.cam?.tool?.canVariableBevel===false)warnings.push(`${label}: variable Fase gewählt, Werkzeug meldet CanVarBev=0.`);
         if(c.cam?.tool?.rotationType===0&&faces.some(f=>Math.abs(Number(f.angleDeg)||0)>EPS))warnings.push(`${label}: Fasenwinkel gesetzt, Werkzeug meldet RotType=0.`);
       }
-      for(const [kind,lead] of [["Anlauf",c.cam?.leadIn],["Auslauf",c.cam?.leadOut]]){if(!lead)continue;if(Number(lead.lengthMm)<0)errors.push(`${label}: ${kind}-Länge ist negativ.`);if(Number(lead.radiusMm)<0)errors.push(`${label}: ${kind}-Radius ist negativ.`);if(Number(lead.verticalMm)<0)errors.push(`${label}: ${kind}-Senkrechtanteil ist negativ.`)}
-      const rs=Number(c.cam?.relativeSpeedPct??100),pw=Number(c.cam?.powerPct??100),hd=Number(c.cam?.headIndex??1),ga=Number(c.cam?.gantryIndex??1);
-      if(!(rs>0&&rs<=1000))errors.push(`${label}: relative Geschwindigkeit muss zwischen 1 und 1000 % liegen.`);
-      if(!(pw>=0&&pw<=100))errors.push(`${label}: Leistung muss zwischen 0 und 100 % liegen.`);
-      if(!(hd>=1))errors.push(`${label}: Kopfindex muss mindestens 1 sein.`);if(!(ga>=1))errors.push(`${label}: Portalindex muss mindestens 1 sein.`);
-      for(const [j,m] of (c.cam?.microjoints||[]).entries())if(!(Number(m.lengthMm)>0))errors.push(`${label}: Mikrosteg ${j+1} hat keine gültige Länge.`);
+      for(const [kind,lead] of [["Anlauf",c.cam?.leadIn],["Auslauf",c.cam?.leadOut]]){if(!lead)continue;if(Number(lead.lengthMm)<0)errors.push(`${label}: ${kind}-Länge ist negativ.`);if(Number(lead.radiusMm)<0)errors.push(`${label}: ${kind}-Radius ist negativ.`)}
       if(c.cam?.tool?.supportsTHT&&role!=="cut")warnings.push(`${label}: THT-fähiges Werkzeug ist nicht als Schneidwerkzeug klassifiziert.`);
       if(!c.cam?.tool?.code)warnings.push(`${label}: kein Werkzeugcode.`);
     }
